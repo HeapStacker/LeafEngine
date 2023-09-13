@@ -143,6 +143,7 @@
     <ClInclude Include="DynamicObject.h" />
     <ClInclude Include="EventProcessor.h" />
     <ClInclude Include="ContentInitializer.h" />
+    <ClInclude Include="openGlInitialization.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="RenderableObject.h" />
@@ -151,6 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="openGlInitialization.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
