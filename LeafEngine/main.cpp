@@ -1,17 +1,11 @@
 ﻿#include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <thread>
 
-#include "shader.h"
 #include "camera.h"
-#include "model.h"
-#include <iostream>
 #include "contentInitializer.h"
 #include "RenderableObject.h"
+#include "manualSettings.h"
 
 using namespace std::chrono;
 
@@ -19,84 +13,19 @@ using namespace std::chrono;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+void processInput(GLFWwindow* window);
+
 // lighting
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 GLFWwindow* window = nullptr;
 Camera* camera = nullptr;
 
-void processInput(GLFWwindow* window)
-{
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera->ProcessKeyboard(FORWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera->ProcessKeyboard(BACKWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera->ProcessKeyboard(LEFT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera->ProcessKeyboard(RIGHT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		camera->ProcessKeyboard(UP, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-		camera->ProcessKeyboard(DOWN, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS) {
-		RenderableObject::Erase(2);
-	}
-}
+static duration frameDuration = milliseconds(1000) / fps; //new thing from c++ 20, (easy time handling)
+static float frameDurationSeconds = (float)(frameDuration).count();
 
-static int fps = 120;
 
-static float vertices[] = {
-	// positions          // normals           // texture coords
-	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-
-	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-	 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
-	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-
-	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-	-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-	-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-
-	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-
-	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
-	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-
-	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-	 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
-	 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-	 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
-};
-
-Attenuation attenuation = { 1.f, 0.09f, 0.032f };
-DirectionalLight dirLight = { {-0.2f, -1.0f, -0.3f}, {0.2f, 0.2f, 0.2f}, {0.05f, 0.05f, 0.05f}, {0.2f, 0.2f, 0.2f} };
-SpotLight spotLight = { {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, attenuation, getSpotLightCutOff(10.f), getSpotLightCutOff(15.f) };
-
+bool applyGravity = false;
 
 int main()
 {
@@ -105,17 +34,25 @@ int main()
 	initializer->setUp("OpenGL Tut", 800, 600);
 	window = initializer->window;
 	camera = initializer->camera;
+
 	RenderableObject::SetLightProperties(dirLight, spotLight);
 	RenderableObject backpack("models/backpack/backpack.obj");
 	backpack.setPosition({ 10.f, 3.f, -2.f });
 	backpack.rotateAround({ 1.f, 0.f, 1.f }, 37.f);
-	backpack.setBoxColider();
+	//backpack.setBoxColider({1, 1, 1});
 	RenderableObject cubeBag("models/backpack/backpack.obj");
-	cubeBag.setBoxColider();
 	cubeBag.setPosition({ 10.f, 3.f, -10.f });
-	//cube.turnToLamp({1.f, 1.f, 1.f}, 1.f, attenuation);
+	cubeBag.scale(5);
+	//cubeBag.setBoxColider({1, 1, 1});
+	RenderableObject cube(vertices, sizeof(vertices), "textures/container2.png", "textures/container2_specular.png");
+	cube.setPosition({ -4, -4, -4 });
+	RenderableObject lightCube(vertices, sizeof(vertices), {1, 0, 0});
+	lightCube.rotateAround({ 0, 0, 1 }, 45.f);
+	lightCube.setBoxColider({2, 2, 2});
+
+
 	system_clock::time_point tp1, tp2;
-	duration frameDuration = milliseconds(1000) / fps;
+
 	while (!glfwWindowShouldClose(window))
 	{
 		tp1 = system_clock::now();
@@ -135,4 +72,25 @@ int main()
 	}
 	glfwTerminate();
 	return 0;
+}
+
+void processInput(GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		camera->ProcessKeyboard(FORWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camera->ProcessKeyboard(BACKWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camera->ProcessKeyboard(LEFT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camera->ProcessKeyboard(RIGHT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		camera->ProcessKeyboard(UP, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		camera->ProcessKeyboard(DOWN, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS) {
+		RenderableObject::Erase(2);
+	}
 }

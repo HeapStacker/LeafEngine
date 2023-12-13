@@ -11,7 +11,8 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/string_cast.hpp>
-#include "BoxColider.h"
+#include "lightProperties.h"
+#include "Colider.h"
 
 struct MaterialData {
 	unsigned int VAO;
@@ -19,41 +20,16 @@ struct MaterialData {
 	unsigned int diffuseMap;
 	unsigned int specularMap;
 	unsigned int verticesCount;
+	glm::vec3 color;
 };
 
-//usefull when creating multiple light objects with same settings
-struct Attenuation {
-	float constantMultiplier;
-	float linearMultiplier;
-	float quadraticMultiplier;
+class RenderableObject;
+
+struct ColisionBundle {
+	Colider* colider = nullptr;
+	ColisionExecutor* colisionExecutor = nullptr;
+	RenderableObject* coliderRepresentation = nullptr;
 };
-
-struct DirectionalLight {
-	glm::vec3 direction;
-	glm::vec3 ambient;
-	glm::vec3 diffuse;
-	glm::vec3 specular;
-};
-
-static float getSpotLightCutOff(float degrees) {
-	return glm::cos(glm::radians(degrees));
-}
-
-struct SpotLight {
-	glm::vec3 ambient;
-	glm::vec3 diffuse;
-	glm::vec3 specular;
-	const Attenuation& attenuation;
-	float innerCutOff = getSpotLightCutOff(10.f);
-	float outerCutOff = getSpotLightCutOff(15.f);
-};
-
-struct Box {
-	glm::mat4* mMatrix = nullptr;  
-	glm::vec3 halfExtents; // Pola duljine stranica kvadra
-};
-
-bool isCollision(const Box& box1, const Box& box2);
 
 class RenderableObject
 {
@@ -65,36 +41,38 @@ class RenderableObject
 	unsigned int shaderType = 0;
 	bool isLuminous = false;
 	unsigned int luminousObjectId = 0;
-	static bool areLightsSet;
-	Box* boxColider = nullptr;
-	void checkForColisions();
+	ColisionBundle colisionBundle;
 public:
 	MaterialData materialData;
 	static unsigned int luminousObjectsCount;
 	static void SetLightProperties(const DirectionalLight& dirLight, const SpotLight& spotLight);
 	static void SetWindowWidthHeight(const unsigned int& width, const unsigned int& height);
-
-	//we use this function also to reset model matrix values
-	//example for non constant rotation in game loop...
-	//object.setPosition(); --> without this the object will rotate non stop
-	//object.rotateAround(glm::normalize(glm::vec3(0.1f, 0.1f, 0.f)), glm::radians(50.f));
 	void setPosition(const glm::vec3& position);
 	void translate(const glm::vec3& position);
 
 	void scale(float scalar) {
 		modelMatrix = glm::scale(modelMatrix, glm::vec3(scalar));
-		checkForColisions();
+		if (colisionBundle.colider) ProccesColisions(this);
+	}
+
+	void scale(const glm::vec3& scalar) {
+		modelMatrix = glm::scale(modelMatrix, scalar);
+		if (colisionBundle.colider) ProccesColisions(this);
 	}
 
 	void rotateAround(glm::vec3 axis, float degrees) {
 		modelMatrix = glm::rotate(modelMatrix, glm::radians(degrees), glm::normalize(axis));
-		checkForColisions();
+		if (colisionBundle.colider) ProccesColisions(this);
+	}
+
+	glm::vec3 getPosition() {
+		return glm::vec3(modelMatrix[3]);
 	}
 
 	RenderableObject() {}
-	RenderableObject(std::string modelPath, bool isColideable = false);
+	RenderableObject(std::string modelPath);
 	RenderableObject(float* vertices, unsigned int verticesCount, const char* diffuseTexturePath, const char* specularTexturePath);
-	RenderableObject(float* vertices, unsigned int verticesCount);
+	RenderableObject(float* vertices, unsigned int verticesCount, const glm::vec3& color);
 	~RenderableObject();
 	void turnToLamp(const glm::vec3& color, float lightMultiplier, const Attenuation& attenuation);
 	unsigned int getShaderType() { return shaderType; }
@@ -102,19 +80,25 @@ public:
 	static RenderableObject* FindById(unsigned int id);
 	static void ReadActiveIDs();
 	static void RenderObjects(GLFWwindow* window, Camera* camera);
+	static void ProccesColisions(RenderableObject* transformedObject);
 
-	void setBoxColider(glm::vec3 sides = {1.f, 1.f, 1.f}) { //default box colider is a cube 1.f units each side
-		std::cout << "Colider size = " << glm::to_string(sides) << std::endl;
-		this->boxColider = new Box;
-		boxColider->mMatrix = &modelMatrix;
-		boxColider->halfExtents = sides / 2.f;
+	void setBoxColider(const glm::vec3& sides) {
+		if (!colisionBundle.colider) {
+			colisionBundle.colider = new BoxColider(&modelMatrix, sides);
+			colisionBundle.colisionExecutor = new BoxColisionExecutor((BoxColider*)colisionBundle.colider);
+		}
+		else {
+			std::cerr << "Colider already set!\n";
+		}
 	}
 
-	void deleteColider() {
-		if (boxColider) delete boxColider;
-	}
-
-	glm::vec3 getPosition() {
-		return glm::vec3(modelMatrix[3]);
+	void setSphereColider(float radius) {
+		if (!colisionBundle.colider) {
+			colisionBundle.colider = new SphereColider(&modelMatrix, radius);
+			colisionBundle.colisionExecutor = new SphereColisionExecutor((SphereColider*)colisionBundle.colider);
+		}
+		else {
+			std::cerr << "Colider already set!\n";
+		}
 	}
 };

@@ -33,7 +33,13 @@
     <ClInclude Include="RenderableObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BoxColider.h">
+    <ClInclude Include="manualSettings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Colider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lightProperties.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -56,7 +62,7 @@
     <ClCompile Include="stb_image_introduction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BoxColider.cpp">
+    <ClCompile Include="Colider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

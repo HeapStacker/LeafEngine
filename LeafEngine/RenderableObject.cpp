@@ -9,7 +9,7 @@ std::vector<RenderableObject*> RenderableObject::renderableObjects;
 unsigned int RenderableObject::luminousObjectsCount = 0;
 static Shader* multiLightTextureShader = nullptr;
 static Shader* colorShader = nullptr;
-bool RenderableObject::areLightsSet = false;
+static bool areLightsSet = false;
 
 static void DeleteShaders() {
 	if (multiLightTextureShader) delete multiLightTextureShader;
@@ -25,64 +25,22 @@ void crashAndReport(int crashId, std::string errorMessage) {
 	exit(crashId);
 }
 
-static glm::vec3 getPos(glm::mat4& mMatrix) {
+glm::vec3 getPos(glm::mat4& mMatrix) {
 	return glm::vec3(mMatrix[3]);
 }
 
-// Funkcija za provjeru kolizije izmeðu dva kvadra u 3D prostoru
-static bool isCollision(const Box& box1, const Box& box2) {
-	// Osobe kvadra
-	std::vector<glm::vec3> axes = {
-		glm::vec3(1, 0, 0), // X os
-		glm::vec3(0, 1, 0), // Y os
-		glm::vec3(0, 0, 1)  // Z os
-	};
-
-	// Razlika vektora pozicija dvaju kvadara
-	glm::vec3 delta = getPos(*box2.mMatrix) - getPos(*box1.mMatrix);
-
-	// Provjera kolizije za svaku os
-	for (const auto& axis : axes) {
-		float projection1 = glm::dot(getPos(*box1.mMatrix), axis);
-		float min1 = projection1 - glm::dot(box1.halfExtents, glm::abs(axis));
-		float max1 = projection1 + glm::dot(box1.halfExtents, glm::abs(axis));
-
-		float projection2 = glm::dot(getPos(*box2.mMatrix), axis);
-		float min2 = projection2 - glm::dot(box2.halfExtents, glm::abs(axis));
-		float max2 = projection2 + glm::dot(box2.halfExtents, glm::abs(axis));
-
-		// Provjerite preklapanje na trenutnoj osi
-		if (max1 < min2 || max2 < min1) {
-			return false; // Nema kolizije na ovoj osi
-		}
-	}
-
-	// Dodatna provjera za vektore delta
-	for (const auto& axis : axes) {
-		float deltaProjection = glm::dot(delta, axis);
-		float sumExtents = glm::dot(box1.halfExtents, glm::abs(axis)) + glm::dot(box2.halfExtents, glm::abs(axis));
-
-		// Provjerite koliziju na trenutnoj osi
-		if (glm::abs(deltaProjection) > sumExtents) {
-			return false; // Nema kolizije na ovoj osi
-		}
-	}
-
-	return true; // Preklapanje na svim osima
-}
-
-void RenderableObject::checkForColisions() {
-	for (RenderableObject* obj : renderableObjects) {
-		if (obj->boxColider && this->id != obj->id) {
-			if (isCollision(*this->boxColider, *obj->boxColider)) std::cout << "Another colision\n";
-		}
-	}
-}
+//void RenderableObject::checkForColisions() {
+//	for (RenderableObject* obj : renderableObjects) {
+//		if (obj->boxColider && this->boxColider && this->id != obj->id) {
+//			if (isCollision(*this->boxColider, *obj->boxColider)) std::cout << "Another colision\n";
+//		}
+//	}
+//}
 
 void RenderableObject::SetLightProperties(const DirectionalLight& dirLight, const SpotLight& spotLight) {
 	if (!areLightsSet) {
-		multiLightTextureShader = new Shader("lighting.vs", "multyLight.fs");
-		colorShader = new Shader("lightObj.vs", "lightObj.fs");
+		multiLightTextureShader = new Shader("shaders/multiLight.vs", "shaders/multyLight.fs");
+		colorShader = new Shader("shaders/color.vs", "shaders/color.fs");
 		multiLightTextureShader->use();
 		multiLightTextureShader->setInt("numOfPointLights", RenderableObject::luminousObjectsCount);
 		multiLightTextureShader->setInt("material.texture_diffuse", 0);
@@ -156,19 +114,19 @@ void RenderableObject::setPosition(const glm::vec3& position) {
 	}
 	modelMatrix = glm::mat4(1.f);
 	modelMatrix = glm::translate(modelMatrix, position);
-	if (boxColider) checkForColisions();
+	if (colisionBundle.colider) ProccesColisions(this);
 }
 
 void RenderableObject::translate(const glm::vec3& position) {
 	if (isLuminous) {
 		std::string lightId = "pointLights[" + std::to_string(luminousObjectId) + "]";
-		multiLightTextureShader->setVec3(lightId + ".position", position);
+		multiLightTextureShader->setVec3(lightId + ".position", getPosition() + position);
 	}
 	modelMatrix = glm::translate(modelMatrix, getPosition() + position);
-	if (boxColider) checkForColisions();
+	if (colisionBundle.colider) ProccesColisions(this);
 }
 
-RenderableObject::RenderableObject(std::string modelPath, bool isColideable) {
+RenderableObject::RenderableObject(std::string modelPath) {
 	if (areLightsSet) {
 		id = ++RenderableObject::IdAdder;
 		shaderType = 0;
@@ -320,11 +278,12 @@ static void SetVerticesMinimised(RenderableObject* renderableObject, float* vert
 	SetMaterialData(renderableObject, tempVao, tempVbo, verticesSize / sizeof(float));
 }
 
-RenderableObject::RenderableObject(float* vertices, unsigned int verticesSize) {
+RenderableObject::RenderableObject(float* vertices, unsigned int verticesSize, const glm::vec3& color) {
 	if (areLightsSet) {
 		id = ++RenderableObject::IdAdder;
 		shaderType = 1;
 		static bool isFirstTime = true;
+		materialData.color = color;
 		if (isFirstTime) {
 			SetVerticesMinimised(this, vertices, verticesSize);
 			isFirstTime = false;
@@ -337,10 +296,11 @@ RenderableObject::RenderableObject(float* vertices, unsigned int verticesSize) {
 
 RenderableObject::~RenderableObject() {
 	if (model) delete model;
+	if (colisionBundle.colider) delete colisionBundle.colider;
+	if (colisionBundle.colisionExecutor) delete colisionBundle.colisionExecutor;
 	glDeleteVertexArrays(1, &materialData.VAO);
 	glDeleteBuffers(1, &materialData.VBO);
 	if (renderableObjects.size() == 0) { DeleteShaders(); } //this would lead to a major bug if we wanted to run empty content without any objects
-	deleteColider();
 	Erase(id);
 }
 
@@ -351,7 +311,7 @@ void RenderableObject::turnToLamp(const glm::vec3& color, float lightMultiplier,
 	std::string lightId = "pointLights[" + std::to_string(luminousObjectId) + "]";
 	multiLightTextureShader->use();
 	multiLightTextureShader->setInt("numOfPointLights", luminousObjectsCount);
-	multiLightTextureShader->setVec3(lightId + ".position", glm::vec3(modelMatrix[3]));
+	multiLightTextureShader->setVec3(lightId + ".position", getPosition());
 	multiLightTextureShader->setVec3(lightId + ".ambient", color * lightMultiplier);
 	multiLightTextureShader->setVec3(lightId + ".diffuse", color);
 	multiLightTextureShader->setVec3(lightId + ".specular", color);
@@ -382,6 +342,16 @@ void setShaderDrawProperties(Shader* shader, Camera* camera, glm::mat4& model, g
 	shader->setMat4("model", model);
 }
 
+void RenderableObject::ProccesColisions(RenderableObject* transformedObject) {
+	for (RenderableObject* obj : renderableObjects) {
+		if (transformedObject->colisionBundle.colider && obj->colisionBundle.colider && transformedObject->id != obj->id) {
+			obj->colisionBundle.colider->acceptColisionExecution(transformedObject->colisionBundle.colisionExecutor);
+		}
+	}
+}
+
+static glm::vec3 whiteColor = { 1.f, 1.f, 1.f };
+
 void RenderableObject::RenderObjects(GLFWwindow* window, Camera* camera) {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f); //make that the clear color can be changed somewhere
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -404,8 +374,18 @@ void RenderableObject::RenderObjects(GLFWwindow* window, Camera* camera) {
 		}
 		if (renderableObjects[i]->shaderType == 1) {
 			setShaderDrawProperties(colorShader, camera, renderableObjects[i]->modelMatrix, view, projection);
+			colorShader->setVec3("color", renderableObjects[i]->materialData.color);
 			glBindVertexArray(renderableObjects[i]->materialData.VAO);
 			glDrawArrays(GL_TRIANGLES, 0, renderableObjects[i]->materialData.verticesCount);
+			colorShader->setVec3("color", whiteColor);
+		}
+		if (renderableObjects[i]->colisionBundle.colider) {
+			VisualColiderData tempData = renderableObjects[i]->colisionBundle.colider->getVisualColiderData();
+			setShaderDrawProperties(colorShader, camera, renderableObjects[i]->modelMatrix, view, projection);
+			colorShader->setVec3("color", {0, 1, 0});
+			glBindVertexArray(tempData.coliderVAO);
+			glDrawArrays(GL_TRIANGLES, 0, tempData.verticesCount);
+
 		}
 	}
 	glfwSwapBuffers(window);

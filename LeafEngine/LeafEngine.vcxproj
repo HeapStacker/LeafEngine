@@ -143,16 +143,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BoxColider.h" />
     <ClInclude Include="camera.h" />
+    <ClInclude Include="Colider.h" />
     <ClInclude Include="contentInitializer.h" />
+    <ClInclude Include="lightProperties.h" />
+    <ClInclude Include="manualSettings.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="RenderableObject.h" />
     <ClInclude Include="shader.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BoxColider.cpp" />
+    <ClCompile Include="Colider.cpp" />
     <ClCompile Include="contentInitializer.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="main.cpp" />

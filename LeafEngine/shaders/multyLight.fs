@@ -83,6 +83,14 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
     return (ambient + diffuse + specular);
 }
 
+//Ovo za sad
+//Zadaj naslov (prijevod na engleski)
+//Napiši zadatak rada, èemu æe ova aplikacija služiti
+
+
+
+//Što se od matematike koristi, kako sam strukturirao kod
+
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
     vec3 lightDir = normalize(light.position - fragPos);
