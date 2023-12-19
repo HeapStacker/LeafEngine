@@ -12,40 +12,16 @@
 
 class ContentInitializer
 {
-    static ContentInitializer* contentInitializer_;
-    void initGLFW() {
-        glfwInit();
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        #ifdef __APPLE__
-                glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-        #endif
-    }
-    GLFWwindow* createWindow(const char* windowName, int windowWidth, int windowHeight) {
-        GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, windowName, NULL, NULL);
-        if (window == NULL)
-        {
-            std::cout << "Failed to create GLFW window" << std::endl;
-            glfwTerminate();
-            exit(1);
-        }
-        glfwSetWindowPos(window, 800, 400); //just for setting window position manualy (for now)
-        return window;
-    }
+    void initGLFW();
+    GLFWwindow* createWindow(const char* windowName, int windowWidth, int windowHeight);
     void setCoreSettings();
-    void loadGlad() {
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        {
-            std::cout << "Failed to initialize GLAD" << std::endl;
-            exit(2);
-        }
-        stbi_set_flip_vertically_on_load(true);
-        glEnable(GL_DEPTH_TEST);
-    }
+    void loadGlad();
+
     void setLastXY(unsigned int windowWidth, unsigned int windowHeight) {
-        lastX = windowWidth; lastY = windowHeight;
+        lastX = windowWidth; 
+        lastY = windowHeight;
     }
+
     ContentInitializer() {}
 public:
     Camera* camera = nullptr; //refactor
@@ -55,18 +31,13 @@ public:
 	GLFWwindow* window = nullptr;
     ContentInitializer(ContentInitializer& other) = delete;
     void operator=(const ContentInitializer&) = delete;
-    static ContentInitializer* GetInstance();
-    ~ContentInitializer() { delete camera; }
-
-    void setUp(const char* contentName = "OpenGl Context", unsigned int windowWidth = 800, unsigned int windowHeight = 600, glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f), float cameraFov = 45.f, float cameraSensitivity = 0.1f) {
-        initGLFW();
-        setLastXY(windowWidth, windowHeight); //fix maby
-        RenderableObject::SetWindowWidthHeight(windowWidth, windowHeight);
-        window = createWindow(contentName, windowWidth, windowHeight);
-        setCoreSettings();
-        loadGlad();
-        camera = new Camera(cameraPos, cameraFov, cameraSensitivity);
+    static ContentInitializer& GetInstance();
+    void setUp(const char* contentName = "OpenGl Context", unsigned int windowWidth = 800, unsigned int windowHeight = 600, glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f), float cameraFov = 45.f, float cameraSensitivity = 0.1f);
+    
+    ~ContentInitializer() { 
+        delete camera; 
     }
+
     void changeCamera(Camera* camera) {
         delete(this->camera);
         this->camera = nullptr;

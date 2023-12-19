@@ -24,34 +24,38 @@ Camera* camera = nullptr;
 static duration frameDuration = milliseconds(1000) / fps; //new thing from c++ 20, (easy time handling)
 static float frameDurationSeconds = (float)(frameDuration).count();
 
-
-bool applyGravity = false;
-
 int main()
 {
 	float dz = 0.1f;
-	ContentInitializer* initializer = ContentInitializer::GetInstance();
-	initializer->setUp("OpenGL Tut", 800, 600);
-	window = initializer->window;
-	camera = initializer->camera;
-
+	ContentInitializer& initializer = ContentInitializer::GetInstance();
+	initializer.setUp("OpenGL Tut", 800, 600);
+	window = initializer.window;
+	camera = initializer.camera;
 	RenderableObject::SetLightProperties(dirLight, spotLight);
+
+
+	
 	RenderableObject backpack("models/backpack/backpack.obj");
 	backpack.setPosition({ 10.f, 3.f, -2.f });
 	backpack.rotateAround({ 1.f, 0.f, 1.f }, 37.f);
-	//backpack.setBoxColider({1, 1, 1});
+	backpack.setBoxColider({3, 3, 3});
+	Colider::setVisibility(true);
 	RenderableObject cubeBag("models/backpack/backpack.obj");
 	cubeBag.setPosition({ 10.f, 3.f, -10.f });
-	cubeBag.scale(5);
-	//cubeBag.setBoxColider({1, 1, 1});
-	RenderableObject cube(vertices, sizeof(vertices), "textures/container2.png", "textures/container2_specular.png");
-	cube.setPosition({ -4, -4, -4 });
-	RenderableObject lightCube(vertices, sizeof(vertices), {1, 0, 0});
-	lightCube.rotateAround({ 0, 0, 1 }, 45.f);
-	lightCube.setBoxColider({2, 2, 2});
-
+	cubeBag.setSphereColider(2);
+	cubeBag.scale(0.2f);
+	RenderableObject smalObj(vertices, sizeof(vertices), { 1, 0, 1 });
+	smalObj.setSphereColider(0.9f);
+	smalObj.setPosition({ 0, 0, 0 });
+	RenderableObject smallerObj(vertices, sizeof(vertices), { 1, 0, 1 });
+	smallerObj.setBoxColider({ 1, 1, 1 });
+	smallerObj.setPosition({ 1, 0, 0 });
+	smallerObj.scale(0.5);
+	smallerObj.returnColider()->scale(3);
+	
 
 	system_clock::time_point tp1, tp2;
+
 
 	while (!glfwWindowShouldClose(window))
 	{

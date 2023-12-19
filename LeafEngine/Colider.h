@@ -5,39 +5,11 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/string_cast.hpp>
-#include "manualSettings.h"
+#include "Camera.h"
+
 
 class BoxColider;
 class SphereColider;
-
-static unsigned int boxColiderVAO;
-static unsigned int boxColiderVBO;
-static unsigned int boxVerticesCount = sizeof(vertices) / sizeof(float);
-static unsigned int sphereColiderVAO;
-static unsigned int sphereColiderVBO;
-static unsigned int sphereVerticesCount = 0; //not implemented yet
-
-struct VisualColiderData {
-	unsigned int coliderVAO;
-	unsigned int verticesCount;
-};
-
-static void setBoxColiderVAOVBO() {
-	glGenVertexArrays(1, &boxColiderVAO);
-	glGenBuffers(1, &boxColiderVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, boxColiderVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //or GL_DYNAMIC_DRAW for moving objects
-	glBindVertexArray(boxColiderVAO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-}
-
-static void setSphereColiderVAOVBO() {
-	std::cerr << "Sphere colider representation not implemented yet\n";
-	exit(4);
-}
 
 class ColisionExecutor {
 public:
@@ -45,27 +17,42 @@ public:
 	virtual bool isColision(SphereColider* colider) = 0;
 };
 
-class Colider {
-public:
-	glm::mat4* linkedModelMatrix = nullptr;
+void setBoxColiderVAOVBO();
+glm::vec3 getPos(glm::mat4& mMatrix);
 
-	Colider(glm::mat4* linkModelMatrix) {
-		if (linkModelMatrix) linkedModelMatrix = linkModelMatrix;
-		else {
-			std::cerr << "Linked Model Matrix = nullptr!\n";
-			exit(3);
-		}
+class Colider {
+protected:
+	static bool visibility;
+public:
+	glm::mat4 modelMatrix;
+
+	Colider(const glm::mat4& setModelMatrix) {
+		modelMatrix = setModelMatrix;
 	}
 
 	virtual void acceptColisionExecution(ColisionExecutor* colisionExecutor) = 0;
-	virtual VisualColiderData getVisualColiderData() = 0;
+
+	void setPosition(const glm::vec3& position) {
+		modelMatrix = glm::mat4(1.f);
+		modelMatrix = glm::translate(modelMatrix, position);
+	}
+
+	void translate(const glm::vec3& position) {
+		modelMatrix = glm::translate(modelMatrix, getPos(modelMatrix) + position);
+	}
+
+	static void setVisibility(bool visible);
+	virtual void scale(float scalar) = 0;
+	virtual void scale(const glm::vec3& scalar) = 0;
+	virtual void rotateAround(glm::vec3 axis, float degrees) = 0;
+	virtual void draw(Camera* camera, glm::mat4& view, glm::mat4& projection) = 0;
 };
 
 class BoxColider : public Colider {
 public:
 	glm::vec3 halfExtents;
-	BoxColider(glm::mat4* linkModelMatrix, const glm::vec3& sides)
-		:Colider(linkModelMatrix)
+	BoxColider(glm::mat4& linkModelMatrix, const glm::vec3& sides)
+		:Colider(glm::scale(linkModelMatrix, sides))
 	{
 		static bool firstInit = true;
 		if (firstInit) { setBoxColiderVAOVBO(); firstInit = false; }
@@ -78,16 +65,30 @@ public:
 		}
 	}
 
-	VisualColiderData getVisualColiderData() override { return { boxColiderVAO, boxVerticesCount }; }
+	void scale(float scalar) override {
+		halfExtents *= scalar;
+		modelMatrix = glm::scale(modelMatrix, glm::vec3(scalar));
+	}
+
+	void scale(const glm::vec3& scalar) override {
+		halfExtents *= scalar;
+		modelMatrix = glm::scale(modelMatrix, scalar);
+	}
+
+	void rotateAround(glm::vec3 axis, float degrees) override {
+		modelMatrix = glm::rotate(modelMatrix, glm::radians(degrees), glm::normalize(axis));
+	}
+
+	void Colider::draw(Camera* camera, glm::mat4& view, glm::mat4& projection) override;
 };
 
 class SphereColider : public Colider {
 public:
 	float radius;
 
-	SphereColider(glm::mat4* linkModelMatrix, float radius) :Colider(linkModelMatrix) {
-		static bool firstInit = true;
-		if (firstInit) { setSphereColiderVAOVBO; firstInit = false; }
+	SphereColider(glm::mat4& linkModelMatrix, float radius) 
+		:Colider(glm::scale(linkModelMatrix, glm::vec3(radius)))
+	{
 		this->radius = radius;
 	}
 
@@ -97,10 +98,21 @@ public:
 		}
 	}
 
-	VisualColiderData getVisualColiderData() override { return { sphereColiderVAO, sphereVerticesCount }; }
-};
+	void scale(float scalar) override {
+		radius *= scalar;
+		modelMatrix = glm::scale(modelMatrix, glm::vec3(scalar));
+	}
 
-glm::vec3 getPos(glm::mat4& mMatrix);
+	void scale(const glm::vec3& scalar) override {
+		std::cerr << "Cant scale sphere with vector scalar.\n";
+	}
+
+	void rotateAround(glm::vec3 axis, float degrees) override {
+		std::cerr << "You cant really rotate an uniform sphere.\n";
+	}
+
+	void draw(Camera* camera, glm::mat4& view, glm::mat4& projection) override;
+};
 
 class BoxColisionExecutor : public ColisionExecutor {
 	BoxColider* transformedColider = nullptr;
@@ -113,39 +125,11 @@ public:
 		}
 	}
 
-	bool isColision(BoxColider* stationaryColider) override {
-		std::vector<glm::vec3> axes = {
-			glm::vec3(1, 0, 0),
-			glm::vec3(0, 1, 0),
-			glm::vec3(0, 0, 1)
-		};
-		glm::vec3 delta = getPos(*stationaryColider->linkedModelMatrix) - getPos(*transformedColider->linkedModelMatrix);
-		for (const auto& axis : axes) {
-			float projection1 = glm::dot(getPos(*transformedColider->linkedModelMatrix), axis);
-			float min1 = projection1 - glm::dot(transformedColider->halfExtents, glm::abs(axis));
-			float max1 = projection1 + glm::dot(transformedColider->halfExtents, glm::abs(axis));
-			float projection2 = glm::dot(getPos(*stationaryColider->linkedModelMatrix), axis);
-			float min2 = projection2 - glm::dot(stationaryColider->halfExtents, glm::abs(axis));
-			float max2 = projection2 + glm::dot(stationaryColider->halfExtents, glm::abs(axis));
-			if (max1 < min2 || max2 < min1) {
-				return false;
-			}
-		}
-		for (const auto& axis : axes) {
-			float deltaProjection = glm::dot(delta, axis);
-			float sumExtents = glm::dot(transformedColider->halfExtents, glm::abs(axis)) + glm::dot(stationaryColider->halfExtents, glm::abs(axis));
-			if (glm::abs(deltaProjection) > sumExtents) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	bool isColision(SphereColider* stationaryColider) override {
-		std::cerr << "Not implemented yet\n";
-		return false;
-	}
+	bool isColision(BoxColider* stationaryColider) override;
+	bool isColision(SphereColider* stationaryColider) override; //approximate sphere as a box
 };
+
+//danas sam prekinul s Laurom (16.12.2023.) :c
 
 class SphereColisionExecutor : public ColisionExecutor {
 	SphereColider* transformedColider = nullptr;
@@ -158,14 +142,6 @@ public:
 		}
 	}
 
-	bool isColision(BoxColider* stationaryColider) override {
-		std::cerr << "Not implemented yet\n";
-		return false;
-	}
-
-	bool isColision(SphereColider* stationaryColider) override {
-		glm::vec3 delta = getPos(*stationaryColider->linkedModelMatrix) - getPos(*transformedColider->linkedModelMatrix);
-		if (sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z) <= stationaryColider->radius + transformedColider->radius) return true;
-		return false;
-	}
+	bool isColision(SphereColider* stationaryColider) override;
+	bool isColision(BoxColider* stationaryColider) override; //approximate sphere as a box
 };

@@ -7,35 +7,36 @@ static unsigned int SCR_HEIGHT;
 unsigned int RenderableObject::IdAdder = 0;
 std::vector<RenderableObject*> RenderableObject::renderableObjects;
 unsigned int RenderableObject::luminousObjectsCount = 0;
-static Shader* multiLightTextureShader = nullptr;
-static Shader* colorShader = nullptr;
+Shader* multiLightTextureShader = nullptr;
+Shader* colorShader = nullptr;
 static bool areLightsSet = false;
 
 static void DeleteShaders() {
-	if (multiLightTextureShader) delete multiLightTextureShader;
-	if (colorShader) delete colorShader;
+	if (multiLightTextureShader) {
+		delete multiLightTextureShader;
+	}
+	if (colorShader) {
+		delete colorShader;
+	}
 	multiLightTextureShader = nullptr;
 	colorShader = nullptr;
 }
 
-void crashAndReport(int crashId, std::string errorMessage) {
+void RenderableObject::deleteObjects() {
+	for (RenderableObject* rObj : renderableObjects) {
+		delete rObj;
+	}
+}
+
+static void report(int crashId, std::string errorMessage, bool pass = false) {
 	std::cout << errorMessage << std::endl;
-	glfwTerminate();
-	DeleteShaders();
-	exit(crashId);
+	if (!pass) {
+		RenderableObject::deleteObjects();
+		glfwTerminate();
+		DeleteShaders();
+		exit(crashId);
+	}
 }
-
-glm::vec3 getPos(glm::mat4& mMatrix) {
-	return glm::vec3(mMatrix[3]);
-}
-
-//void RenderableObject::checkForColisions() {
-//	for (RenderableObject* obj : renderableObjects) {
-//		if (obj->boxColider && this->boxColider && this->id != obj->id) {
-//			if (isCollision(*this->boxColider, *obj->boxColider)) std::cout << "Another colision\n";
-//		}
-//	}
-//}
 
 void RenderableObject::SetLightProperties(const DirectionalLight& dirLight, const SpotLight& spotLight) {
 	if (!areLightsSet) {
@@ -112,9 +113,11 @@ void RenderableObject::setPosition(const glm::vec3& position) {
 		std::string lightId = "pointLights[" + std::to_string(luminousObjectId) + "]";
 		multiLightTextureShader->setVec3(lightId + ".position", position);
 	}
-	modelMatrix = glm::mat4(1.f);
-	modelMatrix = glm::translate(modelMatrix, position);
-	if (colisionBundle.colider) ProccesColisions(this);
+	modelMatrix[3] = glm::vec4({ position, 1 });
+	if (colisionBundle.colider) {
+		colisionBundle.colider->modelMatrix[3] = glm::vec4({ position, 1 });
+		ProccesColisions(this);
+	}
 }
 
 void RenderableObject::translate(const glm::vec3& position) {
@@ -123,7 +126,34 @@ void RenderableObject::translate(const glm::vec3& position) {
 		multiLightTextureShader->setVec3(lightId + ".position", getPosition() + position);
 	}
 	modelMatrix = glm::translate(modelMatrix, getPosition() + position);
-	if (colisionBundle.colider) ProccesColisions(this);
+	if (colisionBundle.colider) {
+		colisionBundle.colider->translate(position);
+		ProccesColisions(this);
+	}
+}
+
+void RenderableObject::scale(float scalar) {
+	modelMatrix = glm::scale(modelMatrix, glm::vec3(scalar));
+	if (colisionBundle.colider) {
+		colisionBundle.colider->scale(scalar);
+		ProccesColisions(this);
+	}
+}
+
+void RenderableObject::scale(const glm::vec3& scalar) {
+	modelMatrix = glm::scale(modelMatrix, scalar);
+	if (colisionBundle.colider) {
+		colisionBundle.colider->scale(scalar);
+		ProccesColisions(this);
+	}
+}
+
+void RenderableObject::rotateAround(glm::vec3 axis, float degrees) {
+	modelMatrix = glm::rotate(modelMatrix, glm::radians(degrees), glm::normalize(axis));
+	if (colisionBundle.colider) {
+		colisionBundle.colider->rotateAround(axis, degrees);
+		ProccesColisions(this);
+	}
 }
 
 RenderableObject::RenderableObject(std::string modelPath) {
@@ -133,27 +163,8 @@ RenderableObject::RenderableObject(std::string modelPath) {
 		model = new Model(modelPath);
 		RenderableObject::renderableObjects.push_back(this);
 	}
-	else crashAndReport(4, "Light properties not set");
+	else report(4, "Light properties not set");
 }
-
-struct VerticesData {
-	float* vertices;
-	unsigned int verticesCount;
-	unsigned int VAO;
-	unsigned int VBO;
-};
-
-//Diffuse flyweight
-struct DiffuseData {
-	const char* diffusePath;
-	unsigned int diffuseMap;
-};
-
-//Specular flyweight
-struct SpecularData {
-	const char* specularPath;
-	unsigned int specularMap;
-};
 
 static std::vector<VerticesData> consumedVertices;
 static std::vector<DiffuseData> consumedDiffuseTextures;
@@ -257,7 +268,7 @@ RenderableObject::RenderableObject(float* vertices, unsigned int verticesSize, c
 		}
 		RenderableObject::renderableObjects.push_back(this);
 	} 
-	else crashAndReport(4, "Light properties not set");
+	else report(4, "Light properties not set");
 }
 
 static void SetVaoVboMinimised(float* vertices, unsigned int& verticesSize, unsigned int& vao, unsigned int& vbo) {
@@ -291,7 +302,7 @@ RenderableObject::RenderableObject(float* vertices, unsigned int verticesSize, c
 		else AssignVertices(this, vertices, verticesSize);
 		RenderableObject::renderableObjects.push_back(this);
 	}
-	else crashAndReport(4, "Light properties not set");
+	else report(4, "Light properties not set");
 }
 
 RenderableObject::~RenderableObject() {
@@ -300,8 +311,8 @@ RenderableObject::~RenderableObject() {
 	if (colisionBundle.colisionExecutor) delete colisionBundle.colisionExecutor;
 	glDeleteVertexArrays(1, &materialData.VAO);
 	glDeleteBuffers(1, &materialData.VBO);
-	if (renderableObjects.size() == 0) { DeleteShaders(); } //this would lead to a major bug if we wanted to run empty content without any objects
 	Erase(id);
+	if (renderableObjects.size() == 0) { DeleteShaders(); } //needs to be after Erase(id)! (otherwise it would be a mem leak)
 }
 
 void RenderableObject::turnToLamp(const glm::vec3& color, float lightMultiplier, const Attenuation& attenuation) {
@@ -326,10 +337,12 @@ void RenderableObject::Erase(unsigned int id) {
 	RenderableObject::renderableObjects.erase(std::remove(RenderableObject::renderableObjects.begin(), RenderableObject::renderableObjects.end(), object), RenderableObject::renderableObjects.end());
 }
 
-void RenderableObject::ReadActiveIDs() {
-	for (int i = 0; i < RenderableObject::renderableObjects.size(); i++) {
-		std::cout << RenderableObject::renderableObjects[i]->id << ". id is active\n";
+std::vector<unsigned int> RenderableObject::GetActiveIDs() {
+	std::vector<unsigned int> ids;
+	for (RenderableObject* rObj : renderableObjects) {
+		ids.push_back(rObj->id);
 	}
+	return ids;
 }
 
 void setShaderDrawProperties(Shader* shader, Camera* camera, glm::mat4& model, glm::mat4& view, glm::mat4& projection) {
@@ -350,8 +363,7 @@ void RenderableObject::ProccesColisions(RenderableObject* transformedObject) {
 	}
 }
 
-static glm::vec3 whiteColor = { 1.f, 1.f, 1.f };
-
+//mož
 void RenderableObject::RenderObjects(GLFWwindow* window, Camera* camera) {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f); //make that the clear color can be changed somewhere
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -377,15 +389,9 @@ void RenderableObject::RenderObjects(GLFWwindow* window, Camera* camera) {
 			colorShader->setVec3("color", renderableObjects[i]->materialData.color);
 			glBindVertexArray(renderableObjects[i]->materialData.VAO);
 			glDrawArrays(GL_TRIANGLES, 0, renderableObjects[i]->materialData.verticesCount);
-			colorShader->setVec3("color", whiteColor);
 		}
 		if (renderableObjects[i]->colisionBundle.colider) {
-			VisualColiderData tempData = renderableObjects[i]->colisionBundle.colider->getVisualColiderData();
-			setShaderDrawProperties(colorShader, camera, renderableObjects[i]->modelMatrix, view, projection);
-			colorShader->setVec3("color", {0, 1, 0});
-			glBindVertexArray(tempData.coliderVAO);
-			glDrawArrays(GL_TRIANGLES, 0, tempData.verticesCount);
-
+			renderableObjects[i]->colisionBundle.colider->draw(camera, view, projection);
 		}
 	}
 	glfwSwapBuffers(window);

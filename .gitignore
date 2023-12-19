@@ -98,6 +98,9 @@ StyleCopReport.xml
 *.svclog
 *.scc
 
+#because it's essential
+!sphere.obj 
+
 # Chutzpah Test files
 _Chutzpah*
 
