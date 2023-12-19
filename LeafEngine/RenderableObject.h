@@ -109,5 +109,5 @@ public:
 		}
 	}
 
-	Colider* returnColider() { return colisionBundle.colider; }
+	Colider* getColider() { return colisionBundle.colider; }
 };

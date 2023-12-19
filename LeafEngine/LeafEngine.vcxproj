@@ -146,6 +146,7 @@
     <ClInclude Include="camera.h" />
     <ClInclude Include="Colider.h" />
     <ClInclude Include="contentInitializer.h" />
+    <ClInclude Include="FrameCapper.h" />
     <ClInclude Include="lightProperties.h" />
     <ClInclude Include="manualSettings.h" />
     <ClInclude Include="mesh.h" />
@@ -156,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="Colider.cpp" />
     <ClCompile Include="contentInitializer.cpp" />
+    <ClCompile Include="FrameCapper.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="model.cpp" />

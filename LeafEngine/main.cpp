@@ -1,13 +1,10 @@
 ﻿#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <thread>
-
+#include <GLFW/glfw3.h>+
 #include "camera.h"
 #include "contentInitializer.h"
 #include "RenderableObject.h"
 #include "manualSettings.h"
-
-using namespace std::chrono;
+#include "FrameCapper.h"+
 
 // timing
 float deltaTime = 0.0f;
@@ -20,9 +17,6 @@ glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 GLFWwindow* window = nullptr;
 Camera* camera = nullptr;
-
-static duration frameDuration = milliseconds(1000) / fps; //new thing from c++ 20, (easy time handling)
-static float frameDurationSeconds = (float)(frameDuration).count();
 
 int main()
 {
@@ -51,28 +45,19 @@ int main()
 	smallerObj.setBoxColider({ 1, 1, 1 });
 	smallerObj.setPosition({ 1, 0, 0 });
 	smallerObj.scale(0.5);
-	smallerObj.returnColider()->scale(3);
-	
+	smallerObj.getColider()->scale(3);
 
-	system_clock::time_point tp1, tp2;
-
+	deltaTime = 1.0 / FrameCapper::GetFrameCap(); //1.f (not 1000.f because delta time needs to be in respect with seconds)
 
 	while (!glfwWindowShouldClose(window))
 	{
-		tp1 = system_clock::now();
-		float currentFrame = static_cast<float>(glfwGetTime());
+		FrameCapper capper();
 		if (cubeBag.getPosition().z <= -20 || cubeBag.getPosition().z >= 10) {
 			dz = dz * -1.f;
 		}
 		cubeBag.setPosition(cubeBag.getPosition() + glm::vec3(0.f, 0.f, dz));
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
 		processInput(window);
 		RenderableObject::RenderObjects(window, camera);
-		tp2 = system_clock::now();
-		if (frameDuration > tp2 - tp1) {
-			std::this_thread::sleep_for(frameDuration - (tp2 - tp1));
-		}
 	}
 	glfwTerminate();
 	return 0;
