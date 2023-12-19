@@ -74,7 +74,7 @@ StyleCopReport.xml
 *_h.h
 *.ilk
 *.meta
-*.obj
+#*.obj
 *.iobj
 *.pch
 *.pdb
@@ -99,7 +99,7 @@ StyleCopReport.xml
 *.scc
 
 #because it's essential
-!sphere.obj 
+#!sphere.obj 
 
 # Chutzpah Test files
 _Chutzpah*
