@@ -13,24 +13,34 @@ class SphereColider;
 
 class ColisionExecutor {
 public:
-	virtual bool isColision(BoxColider* colider) = 0;
-	virtual bool isColision(SphereColider* colider) = 0;
+	virtual void isColision(BoxColider* colider) = 0;
+	virtual void isColision(SphereColider* colider) = 0;
 };
 
 void setBoxColiderVAOVBO();
 glm::vec3 getPos(glm::mat4& mMatrix);
 
+struct ColisionPair {
+	unsigned int firstColider;
+	unsigned int secondColider;
+};
+
 class Colider {
+	unsigned int linkedObjectId = 0;
 protected:
 	static bool visibility;
 public:
+	static std::vector<ColisionPair> colisionList;
 	glm::mat4 modelMatrix;
 
-	Colider(const glm::mat4& setModelMatrix) {
+	Colider(const glm::mat4& setModelMatrix, unsigned int objectId) {
+		linkedObjectId = objectId;
 		modelMatrix = setModelMatrix;
 	}
 
 	virtual void acceptColisionExecution(ColisionExecutor* colisionExecutor) = 0;
+
+	unsigned int getLinkedObjectId() { return linkedObjectId; }
 
 	void setPosition(const glm::vec3& position) {
 		modelMatrix = glm::mat4(1.f);
@@ -38,10 +48,11 @@ public:
 	}
 
 	void translate(const glm::vec3& position) {
-		modelMatrix = glm::translate(modelMatrix, getPos(modelMatrix) + position);
+		this->setPosition(glm::vec3(modelMatrix[3]) + position);
 	}
 
 	static void setVisibility(bool visible);
+	static ColisionPair getLatestColision();
 	virtual void scale(float scalar) = 0;
 	virtual void scale(const glm::vec3& scalar) = 0;
 	virtual void rotateAround(glm::vec3 axis, float degrees) = 0;
@@ -51,18 +62,16 @@ public:
 class BoxColider : public Colider {
 public:
 	glm::vec3 halfExtents;
-	BoxColider(glm::mat4& linkModelMatrix, const glm::vec3& sides)
-		:Colider(glm::scale(linkModelMatrix, sides))
+	BoxColider(glm::mat4& linkModelMatrix, unsigned int objectId)
+		:Colider(glm::scale(linkModelMatrix, {1, 1, 1}), objectId)
 	{
 		static bool firstInit = true;
 		if (firstInit) { setBoxColiderVAOVBO(); firstInit = false; }
-		halfExtents = sides / 2.f;
+		halfExtents = glm::vec3(1, 1, 1) / 2.f;
 	}
 
 	void acceptColisionExecution(ColisionExecutor* colisionExecutor) override {
-		if (colisionExecutor->isColision(this)) {
-			std::cout << "Colision occurred.\n";
-		}
+		colisionExecutor->isColision(this);
 	}
 
 	void scale(float scalar) override {
@@ -86,16 +95,14 @@ class SphereColider : public Colider {
 public:
 	float radius;
 
-	SphereColider(glm::mat4& linkModelMatrix, float radius) 
-		:Colider(glm::scale(linkModelMatrix, glm::vec3(radius)))
+	SphereColider(glm::mat4& linkModelMatrix, unsigned int objectId)
+		:Colider(glm::scale(linkModelMatrix, glm::vec3(1)), objectId)
 	{
-		this->radius = radius;
+		this->radius = 1;
 	}
 
 	void acceptColisionExecution(ColisionExecutor* colisionExecutor) override {
-		if (colisionExecutor->isColision(this)) {
-			std::cout << "Colision occurred.\n";
-		}
+		colisionExecutor->isColision(this);
 	}
 
 	void scale(float scalar) override {
@@ -125,8 +132,8 @@ public:
 		}
 	}
 
-	bool isColision(BoxColider* stationaryColider) override;
-	bool isColision(SphereColider* stationaryColider) override; //approximate sphere as a box
+	void isColision(BoxColider* stationaryColider) override;
+	void isColision(SphereColider* stationaryColider) override; //approximate sphere as a box
 };
 
 //danas sam prekinul s Laurom (16.12.2023.) :c
@@ -142,6 +149,6 @@ public:
 		}
 	}
 
-	bool isColision(SphereColider* stationaryColider) override;
-	bool isColision(BoxColider* stationaryColider) override; //approximate sphere as a box
+	void isColision(SphereColider* stationaryColider) override;
+	void isColision(BoxColider* stationaryColider) override; //approximate sphere as a box
 };

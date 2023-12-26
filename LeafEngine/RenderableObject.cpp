@@ -4,12 +4,30 @@
 
 static unsigned int SCR_WIDTH;
 static unsigned int SCR_HEIGHT;
-unsigned int RenderableObject::IdAdder = 0;
+static unsigned int idAdder = 0;
 std::vector<RenderableObject*> RenderableObject::renderableObjects;
-unsigned int RenderableObject::luminousObjectsCount = 0;
+static unsigned int lampObjectCount = 0;
+static unsigned int flashLightObjectCount = 0;
 Shader* multiLightTextureShader = nullptr;
 Shader* colorShader = nullptr;
 static bool areLightsSet = false;
+
+struct VerticesData {
+	float* vertices;
+	unsigned int verticesCount;
+	unsigned int VAO;
+	unsigned int VBO;
+};
+
+struct DiffuseData {
+	const char* diffusePath;
+	unsigned int diffuseMap;
+};
+
+struct SpecularData {
+	const char* specularPath;
+	unsigned int specularMap;
+};
 
 static void DeleteShaders() {
 	if (multiLightTextureShader) {
@@ -22,28 +40,50 @@ static void DeleteShaders() {
 	colorShader = nullptr;
 }
 
-void RenderableObject::deleteObjects() {
-	for (RenderableObject* rObj : renderableObjects) {
-		delete rObj;
+unsigned int RenderableObject::getID() { return id; }
+
+void RenderableObject::setBoxColider() {
+	if (!colisionBundle.colider) {
+		colisionBundle.colider = new BoxColider(modelMatrix, id);
+		colisionBundle.colisionExecutor = new BoxColisionExecutor((BoxColider*)colisionBundle.colider);
+	}
+	else {
+		std::cerr << "Colider already set!\n";
 	}
 }
 
-static void report(int crashId, std::string errorMessage, bool pass = false) {
-	std::cout << errorMessage << std::endl;
-	if (!pass) {
-		RenderableObject::deleteObjects();
-		glfwTerminate();
-		DeleteShaders();
-		exit(crashId);
+void RenderableObject::setSphereColider() {
+	if (!colisionBundle.colider) {
+		colisionBundle.colider = new SphereColider(modelMatrix, getID());
+		colisionBundle.colisionExecutor = new SphereColisionExecutor((SphereColider*)colisionBundle.colider);
+	}
+	else {
+		std::cerr << "Colider already set!\n";
 	}
 }
 
-void RenderableObject::SetLightProperties(const DirectionalLight& dirLight, const SpotLight& spotLight) {
+Colider* RenderableObject::getColider() { return colisionBundle.colider; }
+
+void RenderableObject::SetSunDirection(const glm::vec3& direction) {
+	if (areLightsSet) {
+		multiLightTextureShader->setVec3("dirLight.direction", direction);
+	}
+}
+
+static void report(int crashId, std::string errorMessage) {
+	std::cerr << errorMessage << std::endl;
+	glfwTerminate();
+	DeleteShaders();
+	exit(crashId);
+}
+
+void RenderableObject::SetLightProperties(const DirectionalLight& dirLight) {
 	if (!areLightsSet) {
 		multiLightTextureShader = new Shader("shaders/multiLight.vs", "shaders/multyLight.fs");
 		colorShader = new Shader("shaders/color.vs", "shaders/color.fs");
 		multiLightTextureShader->use();
-		multiLightTextureShader->setInt("numOfPointLights", RenderableObject::luminousObjectsCount);
+		multiLightTextureShader->setInt("numOfPointLights", lampObjectCount);
+		multiLightTextureShader->setInt("numOfFlashLights", flashLightObjectCount);
 		multiLightTextureShader->setInt("material.texture_diffuse", 0);
 		multiLightTextureShader->setInt("material.texture_specular", 1); //create a better solution for more objects and different specular and diffuse maps
 		multiLightTextureShader->setFloat("material.shininess", 32.f);
@@ -51,14 +91,6 @@ void RenderableObject::SetLightProperties(const DirectionalLight& dirLight, cons
 		multiLightTextureShader->setVec3("dirLight.ambient", dirLight.ambient);
 		multiLightTextureShader->setVec3("dirLight.diffuse", dirLight.diffuse);
 		multiLightTextureShader->setVec3("dirLight.specular", dirLight.specular);
-		multiLightTextureShader->setVec3("spotLight.ambient", spotLight.ambient);
-		multiLightTextureShader->setVec3("spotLight.diffuse", spotLight.diffuse);
-		multiLightTextureShader->setVec3("spotLight.specular", spotLight.specular);
-		multiLightTextureShader->setFloat("spotLight.constant", spotLight.attenuation.constantMultiplier);
-		multiLightTextureShader->setFloat("spotLight.linear", spotLight.attenuation.linearMultiplier);
-		multiLightTextureShader->setFloat("spotLight.quadratic", spotLight.attenuation.quadraticMultiplier);
-		multiLightTextureShader->setFloat("spotLight.cutOff", spotLight.innerCutOff);
-		multiLightTextureShader->setFloat("spotLight.outerCutOff", spotLight.outerCutOff);
 		areLightsSet = true;
 	}
 }
@@ -94,7 +126,7 @@ unsigned int loadTexture(char const* path)
 	}
 	else
 	{
-		std::cout << "Texture failed to load at path: " << path << std::endl;
+		std::cerr << "Texture failed to load at path: " << path << std::endl;
 		stbi_image_free(data);
 	}
 
@@ -109,11 +141,9 @@ RenderableObject* RenderableObject::FindById(unsigned int id) {
 }
 
 void RenderableObject::setPosition(const glm::vec3& position) {
-	if (isLuminous) {
-		std::string lightId = "pointLights[" + std::to_string(luminousObjectId) + "]";
-		multiLightTextureShader->setVec3(lightId + ".position", position);
-	}
+	static std::string lightId;
 	modelMatrix[3] = glm::vec4({ position, 1 });
+	if (luminousProperties.flashLampID || luminousProperties.lampID) applyLightToShader();
 	if (colisionBundle.colider) {
 		colisionBundle.colider->modelMatrix[3] = glm::vec4({ position, 1 });
 		ProccesColisions(this);
@@ -121,11 +151,7 @@ void RenderableObject::setPosition(const glm::vec3& position) {
 }
 
 void RenderableObject::translate(const glm::vec3& position) {
-	if (isLuminous) {
-		std::string lightId = "pointLights[" + std::to_string(luminousObjectId) + "]";
-		multiLightTextureShader->setVec3(lightId + ".position", getPosition() + position);
-	}
-	modelMatrix = glm::translate(modelMatrix, getPosition() + position);
+	this->setPosition(this->getPosition() + position);
 	if (colisionBundle.colider) {
 		colisionBundle.colider->translate(position);
 		ProccesColisions(this);
@@ -156,9 +182,13 @@ void RenderableObject::rotateAround(glm::vec3 axis, float degrees) {
 	}
 }
 
+glm::vec3 RenderableObject::getPosition() {
+	return glm::vec3(modelMatrix[3]);
+}
+
 RenderableObject::RenderableObject(std::string modelPath) {
 	if (areLightsSet) {
-		id = ++RenderableObject::IdAdder;
+		id = ++idAdder;
 		shaderType = 0;
 		model = new Model(modelPath);
 		RenderableObject::renderableObjects.push_back(this);
@@ -195,7 +225,7 @@ static bool AssignOrCreateDiffuseMap(RenderableObject* renderableObject, Diffuse
 		renderableObject->materialData.diffuseMap = data->diffuseMap; //set materials diffuse map
 		return true;
 	}
-	if (!data || data->diffusePath != diffuseTexturePath && lastCreatedMap) {
+	if (!data || data && data->diffusePath != diffuseTexturePath && lastCreatedMap) {
 		DiffuseData tempData = { diffuseTexturePath, loadTexture(diffuseTexturePath) };
 		consumedDiffuseTextures.push_back(tempData);
 		renderableObject->materialData.diffuseMap = tempData.diffuseMap;
@@ -208,7 +238,7 @@ static bool AssignOrCreateSpecularMap(RenderableObject* renderableObject, Specul
 		renderableObject->materialData.specularMap = data->specularMap; //set materials specular map
 		return true;
 	}
-	if (!data || data->specularPath != specularTexturePath && lastCreatedMap) {
+	if (!data || data && data->specularPath != specularTexturePath && lastCreatedMap) {
 		SpecularData tempData = { specularTexturePath, loadTexture(specularTexturePath) };
 		consumedSpecularTextures.push_back(tempData);
 		renderableObject->materialData.specularMap = tempData.specularMap;
@@ -247,7 +277,7 @@ static void AssignVertices(RenderableObject* renderableObject, float* vertices, 
 
 RenderableObject::RenderableObject(float* vertices, unsigned int verticesSize, const char* diffuseTexturePath, const char* specularTexturePath) {
 	if (areLightsSet) {
-		id = ++RenderableObject::IdAdder;
+		id = ++idAdder;
 		shaderType = 0;
 		static bool isFirstTime = true;
 		if (isFirstTime) {
@@ -291,7 +321,7 @@ static void SetVerticesMinimised(RenderableObject* renderableObject, float* vert
 
 RenderableObject::RenderableObject(float* vertices, unsigned int verticesSize, const glm::vec3& color) {
 	if (areLightsSet) {
-		id = ++RenderableObject::IdAdder;
+		id = ++idAdder;
 		shaderType = 1;
 		static bool isFirstTime = true;
 		materialData.color = color;
@@ -316,19 +346,54 @@ RenderableObject::~RenderableObject() {
 }
 
 void RenderableObject::turnToLamp(const glm::vec3& color, float lightMultiplier, const Attenuation& attenuation) {
-	isLuminous = true;
-	luminousObjectId = luminousObjectsCount;
-	luminousObjectsCount++;
-	std::string lightId = "pointLights[" + std::to_string(luminousObjectId) + "]";
+	if (!luminousProperties.lampID) {
+		luminousProperties.lampID = ++lampObjectCount;
+		multiLightTextureShader->use();
+		multiLightTextureShader->setInt("numOfPointLights", lampObjectCount);
+		luminousProperties.color = color;
+		luminousProperties.lightMultiplier = lightMultiplier;
+		luminousProperties.attenuation = attenuation;
+		applyLightToShader();
+	}
+}
+
+void RenderableObject::turnToSpotLight(const glm::vec3& direction, float innerCutOff, float outerCutOff, const glm::vec3& color, float lightMultiplier, const Attenuation& attenuation) {
+	if (!luminousProperties.flashLampID) {
+		luminousProperties.flashLampID = ++flashLightObjectCount;
+		multiLightTextureShader->use();
+		multiLightTextureShader->setInt("numOfFlashLights", flashLightObjectCount);
+		luminousProperties.direction = direction;
+		luminousProperties.innerCutOff = getSpotLightCutOff(innerCutOff);
+		luminousProperties.outerCutOff = getSpotLightCutOff(outerCutOff);
+		luminousProperties.color = color;
+		luminousProperties.lightMultiplier = lightMultiplier;
+		luminousProperties.attenuation = attenuation;
+		applyLightToShader();
+	}
+}
+
+void RenderableObject::applyLightToShader() {
+	static std::string lightId;
 	multiLightTextureShader->use();
-	multiLightTextureShader->setInt("numOfPointLights", luminousObjectsCount);
+	if (luminousProperties.flashLampID) {
+		lightId = "flashLights[" + std::to_string(luminousProperties.flashLampID - 1) + "]";
+		multiLightTextureShader->setVec3(lightId + ".direction", luminousProperties.direction);
+		multiLightTextureShader->setFloat(lightId + ".cutOff", luminousProperties.innerCutOff);
+		multiLightTextureShader->setFloat(lightId + ".outerCutOff", luminousProperties.outerCutOff);
+	}
+	else lightId = "pointLights[" + std::to_string(luminousProperties.lampID - 1) + "]";
 	multiLightTextureShader->setVec3(lightId + ".position", getPosition());
-	multiLightTextureShader->setVec3(lightId + ".ambient", color * lightMultiplier);
-	multiLightTextureShader->setVec3(lightId + ".diffuse", color);
-	multiLightTextureShader->setVec3(lightId + ".specular", color);
-	multiLightTextureShader->setFloat(lightId + ".constant", attenuation.constantMultiplier);
-	multiLightTextureShader->setInt(lightId + ".linear", attenuation.linearMultiplier);
-	multiLightTextureShader->setInt(lightId + ".quadratic", attenuation.quadraticMultiplier);
+	multiLightTextureShader->setFloat(lightId + ".constant", luminousProperties.attenuation.constantMultiplier);
+	multiLightTextureShader->setFloat(lightId + ".linear", luminousProperties.attenuation.linearMultiplier);
+	multiLightTextureShader->setFloat(lightId + ".quadratic", luminousProperties.attenuation.quadraticMultiplier);
+	multiLightTextureShader->setVec3(lightId + ".ambient", luminousProperties.color * luminousProperties.lightMultiplier);
+	multiLightTextureShader->setVec3(lightId + ".diffuse", luminousProperties.color);
+	multiLightTextureShader->setVec3(lightId + ".specular", luminousProperties.color);
+}
+
+void RenderableObject::changeSpotLightDirection(const glm::vec3& direction) {
+	luminousProperties.direction = direction;
+	applyLightToShader();
 }
 
 //object isn't fully removed (only at the end of the program)
@@ -337,19 +402,9 @@ void RenderableObject::Erase(unsigned int id) {
 	RenderableObject::renderableObjects.erase(std::remove(RenderableObject::renderableObjects.begin(), RenderableObject::renderableObjects.end(), object), RenderableObject::renderableObjects.end());
 }
 
-std::vector<unsigned int> RenderableObject::GetActiveIDs() {
-	std::vector<unsigned int> ids;
-	for (RenderableObject* rObj : renderableObjects) {
-		ids.push_back(rObj->id);
-	}
-	return ids;
-}
-
 void setShaderDrawProperties(Shader* shader, Camera* camera, glm::mat4& model, glm::mat4& view, glm::mat4& projection) {
 	shader->use();
 	shader->setVec3("viewPos", camera->Position);
-	shader->setVec3("spotLight.position", camera->Position);
-	shader->setVec3("spotLight.direction", camera->Front);
 	shader->setMat4("projection", projection);
 	shader->setMat4("view", view);
 	shader->setMat4("model", model);
@@ -379,7 +434,7 @@ void RenderableObject::RenderObjects(GLFWwindow* window, Camera* camera) {
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, renderableObjects[i]->materialData.diffuseMap);
 				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, renderableObjects[i]->materialData.diffuseMap);
+				glBindTexture(GL_TEXTURE_2D, renderableObjects[i]->materialData.specularMap);
 				glBindVertexArray(renderableObjects[i]->materialData.VAO);
 				glDrawArrays(GL_TRIANGLES, 0, renderableObjects[i]->materialData.verticesCount);
 			}

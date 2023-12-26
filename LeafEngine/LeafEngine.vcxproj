@@ -147,8 +147,8 @@
     <ClInclude Include="Colider.h" />
     <ClInclude Include="contentInitializer.h" />
     <ClInclude Include="FrameCapper.h" />
+    <ClInclude Include="leafEngine.h" />
     <ClInclude Include="lightProperties.h" />
-    <ClInclude Include="manualSettings.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="RenderableObject.h" />
@@ -159,6 +159,7 @@
     <ClCompile Include="contentInitializer.cpp" />
     <ClCompile Include="FrameCapper.cpp" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="lightProperties.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="RenderableObject.cpp" />

@@ -1,9 +1,11 @@
 #pragma once
+#include "contentInitializer.h"
+#include "RenderableObject.h"
 #include "lightProperties.h"
+#include "FrameCapper.h"
+#include "camera.h"
 
-static int fps = 120;
-
-//unit cube
+//if you want to create a box type object
 static float vertices[] = {
 	// positions          // normals           // texture coords
 	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
@@ -48,7 +50,3 @@ static float vertices[] = {
 	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
 	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
 };
-
-static Attenuation attenuation = { 1.f, 0.09f, 0.032f };
-static DirectionalLight dirLight = { {-0.2f, -1.0f, -0.3f}, {0.2f, 0.2f, 0.2f}, {0.05f, 0.05f, 0.05f}, {0.2f, 0.2f, 0.2f} };
-static SpotLight spotLight = { {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, attenuation, getSpotLightCutOff(10.f), getSpotLightCutOff(15.f) };

@@ -8,9 +8,11 @@ class FrameCapper
 	static unsigned int fps;
 	std::chrono::steady_clock::time_point first, last;
 	std::chrono::duration<float> duration;
+	static void dealWithColisions();
 public:
 	//needs to be called inside a content loop (game loop, animation loop...)
 	FrameCapper() {
+		std::cout << "here we are\n";
 		first = std::chrono::steady_clock::now();
 	}
 	~FrameCapper() {
@@ -22,5 +24,6 @@ public:
 	}
 	static void SetFrameCap(unsigned int fps);
 	static unsigned int GetFrameCap();
+	static float GetDeltaTime();
 };
 

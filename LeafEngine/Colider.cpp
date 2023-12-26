@@ -49,8 +49,19 @@ static float boxVertices[] = {
 
 bool Colider::visibility = false;
 
+std::vector<ColisionPair> Colider::colisionList;
+
 void Colider::setVisibility(bool visible) {
 	Colider::visibility = visible;
+}
+
+ColisionPair Colider::getLatestColision() {
+	if (!colisionList.empty()) {
+		ColisionPair pair = colisionList.back();
+		colisionList.pop_back();
+		return pair;
+	}
+	return { 0, 0 };
 }
 
 static unsigned int boxColiderVAO;
@@ -93,7 +104,9 @@ void SphereColider::draw(Camera* camera, glm::mat4& view, glm::mat4& projection)
 	}
 }
 
-bool BoxColisionExecutor::isColision(BoxColider* stationaryColider) {
+void BoxColisionExecutor::isColision(BoxColider* stationaryColider) {
+	static bool isColision = true;
+	isColision = true;
 	static std::vector<glm::vec3> axes = {
 			glm::vec3(1, 0, 0),
 			glm::vec3(0, 1, 0),
@@ -107,21 +120,19 @@ bool BoxColisionExecutor::isColision(BoxColider* stationaryColider) {
 		float projection2 = glm::dot(getPos(stationaryColider->modelMatrix), axis);
 		float min2 = projection2 - glm::dot(stationaryColider->halfExtents, glm::abs(axis));
 		float max2 = projection2 + glm::dot(stationaryColider->halfExtents, glm::abs(axis));
-		if (max1 < min2 || max2 < min1) {
-			return false;
-		}
+		if (max1 < min2 || max2 < min1) isColision = false;
 	}
 	for (const auto& axis : axes) {
 		float deltaProjection = glm::dot(delta, axis);
 		float sumExtents = glm::dot(transformedColider->halfExtents, glm::abs(axis)) + glm::dot(stationaryColider->halfExtents, glm::abs(axis));
-		if (glm::abs(deltaProjection) > sumExtents) {
-			return false;
-		}
+		if (glm::abs(deltaProjection) > sumExtents) isColision = false;
 	}
-	return true;
+	if (isColision) Colider::colisionList.push_back({ this->transformedColider->getLinkedObjectId(), stationaryColider->getLinkedObjectId() });
 }
 
-bool BoxColisionExecutor::isColision(SphereColider* stationaryColider) {
+void BoxColisionExecutor::isColision(SphereColider* stationaryColider) {
+	static bool isColision = true;
+	isColision = true;
 	static std::vector<glm::vec3> axes = {
 		glm::vec3(1, 0, 0),
 		glm::vec3(0, 1, 0),
@@ -135,28 +146,26 @@ bool BoxColisionExecutor::isColision(SphereColider* stationaryColider) {
 		float projection2 = glm::dot(getPos(stationaryColider->modelMatrix), axis);
 		float min2 = projection2 - glm::dot(glm::vec3(stationaryColider->radius), glm::abs(axis));
 		float max2 = projection2 + glm::dot(glm::vec3(stationaryColider->radius), glm::abs(axis));
-		if (max1 < min2 || max2 < min1) {
-			return false;
-		}
+		if (max1 < min2 || max2 < min1) isColision = false;
 	}
 	for (const auto& axis : axes) {
 		float deltaProjection = glm::dot(delta, axis);
 		float sumExtents = glm::dot(transformedColider->halfExtents, glm::abs(axis)) + glm::dot(glm::vec3(stationaryColider->radius), glm::abs(axis));
-		if (glm::abs(deltaProjection) > sumExtents) {
-			return false;
-		}
+		if (glm::abs(deltaProjection) > sumExtents) isColision = false;
 	}
-	return true;
+	if (isColision) Colider::colisionList.push_back({ this->transformedColider->getLinkedObjectId(), stationaryColider->getLinkedObjectId() });
 }
 
 
-bool SphereColisionExecutor::isColision(SphereColider* stationaryColider) {
+void SphereColisionExecutor::isColision(SphereColider* stationaryColider) {
 	glm::vec3 delta = getPos(stationaryColider->modelMatrix) - getPos(transformedColider->modelMatrix);
-	if (sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z) <= stationaryColider->radius + transformedColider->radius) return true;
-	return false;
+	if (sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z) <= stationaryColider->radius + transformedColider->radius) 
+		Colider::colisionList.push_back({ this->transformedColider->getLinkedObjectId(), stationaryColider->getLinkedObjectId() });
 }
 
-bool SphereColisionExecutor::isColision(BoxColider* stationaryColider) {
+void SphereColisionExecutor::isColision(BoxColider* stationaryColider) {
+	static bool isColision = true;
+	isColision = true;
 	static std::vector<glm::vec3> axes = {
 		glm::vec3(1, 0, 0),
 		glm::vec3(0, 1, 0),
@@ -170,16 +179,12 @@ bool SphereColisionExecutor::isColision(BoxColider* stationaryColider) {
 		float projection2 = glm::dot(getPos(stationaryColider->modelMatrix), axis);
 		float min2 = projection2 - glm::dot(stationaryColider->halfExtents, glm::abs(axis));
 		float max2 = projection2 + glm::dot(stationaryColider->halfExtents, glm::abs(axis));
-		if (max1 < min2 || max2 < min1) {
-			return false;
-		}
+		if (max1 < min2 || max2 < min1) isColision = false;
 	}
 	for (const auto& axis : axes) {
 		float deltaProjection = glm::dot(delta, axis);
 		float sumExtents = glm::dot(glm::vec3(transformedColider->radius), glm::abs(axis)) + glm::dot(stationaryColider->halfExtents, glm::abs(axis));
-		if (glm::abs(deltaProjection) > sumExtents) {
-			return false;
-		}
+		if (glm::abs(deltaProjection) > sumExtents) isColision = false;
 	}
-	return true;
+	if (isColision) Colider::colisionList.push_back({ this->transformedColider->getLinkedObjectId(), stationaryColider->getLinkedObjectId() });
 }
