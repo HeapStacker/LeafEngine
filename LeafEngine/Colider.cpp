@@ -55,7 +55,7 @@ void Colider::setVisibility(bool visible) {
 	Colider::visibility = visible;
 }
 
-ColisionPair Colider::getLatestColision() {
+ColisionPair Colider::GetLatestColision() {
 	if (!colisionList.empty()) {
 		ColisionPair pair = colisionList.back();
 		colisionList.pop_back();

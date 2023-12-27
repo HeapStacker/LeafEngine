@@ -21,8 +21,11 @@ void setBoxColiderVAOVBO();
 glm::vec3 getPos(glm::mat4& mMatrix);
 
 struct ColisionPair {
-	unsigned int firstColider;
-	unsigned int secondColider;
+	unsigned int transformedColider;
+	unsigned int targetedColider;
+	bool equalTo(const ColisionPair& colisionPair) {
+		return colisionPair.targetedColider == targetedColider && colisionPair.transformedColider == transformedColider;
+	}
 };
 
 class Colider {
@@ -52,7 +55,7 @@ public:
 	}
 
 	static void setVisibility(bool visible);
-	static ColisionPair getLatestColision();
+	static ColisionPair GetLatestColision();
 	virtual void scale(float scalar) = 0;
 	virtual void scale(const glm::vec3& scalar) = 0;
 	virtual void rotateAround(glm::vec3 axis, float degrees) = 0;

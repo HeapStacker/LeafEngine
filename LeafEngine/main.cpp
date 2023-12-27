@@ -16,10 +16,6 @@ void processInput(Camera* camera, GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		down1 = true;
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		up1 = true;
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		down2 = true;
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
@@ -28,6 +24,10 @@ void processInput(Camera* camera, GLFWwindow* window)
 		restart = true;
 	if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
 		stopped = !stopped;
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		up1 = true;
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		down1 = true;
 }
 
 static void moveBall(RenderableObject& ball) {
@@ -35,6 +35,23 @@ static void moveBall(RenderableObject& ball) {
 	else ball.setPosition(ball.getPosition() + glm::vec3(-offset, 0.f, 0.f));
 	if (mvUp) ball.setPosition(ball.getPosition() + glm::vec3(0.f, offset, 0.f));
 	else ball.setPosition(ball.getPosition() + glm::vec3(0.f, -offset, 0.f));
+}
+
+void FrameCapper::dealWithColision(ColisionPair& colisionPair) {
+	static RenderableObject* ball = RenderableObject::FindById(3); 
+	static unsigned int transformedObjId, targetedObjId;
+	transformedObjId = colisionPair.transformedColider;
+	targetedObjId = colisionPair.targetedColider;
+	if (transformedObjId == 3) {
+		if (targetedObjId == 1 || targetedObjId == 2) {
+			mvRigh = !mvRigh;
+		}
+		if (targetedObjId == 4 || targetedObjId == 5) {
+			if (mvUp) ball->translate({ 0.f, -offset, 0.f });
+			else ball->translate({ 0.f, offset, 0.f });
+			mvUp = !mvUp;
+		}
+	}
 }
 
 int main()
@@ -75,11 +92,6 @@ int main()
 	wall2.setPosition({ 0, -2.5, -4 });
 	wall2.scale({ 12, 0.2, 1 });
 
-	RenderableObject flashLight(vertices, sizeof(vertices), { 0, 0, 0 });
-	flashLight.setPosition(camera->Position + glm::vec3(0, -0.2, 0));
-	flashLight.scale(0.2f);
-	
-
 	while (!glfwWindowShouldClose(window))
 	{
 		FrameCapper capper = FrameCapper();
@@ -101,34 +113,6 @@ int main()
 		}
 		if (restart) { restart = false; ball.setPosition({ 0, 0, -4 }); }
 		if (stopped) {
-			static ColisionPair pair;
-			static unsigned int firstColisionId, secondColisionId;
-			pair = Colider::getLatestColision();
-			firstColisionId = pair.firstColider;
-			secondColisionId = pair.secondColider;
-			if (firstColisionId != 0 && secondColisionId != 0) {
-				if ((firstColisionId == paddle1.getID() || secondColisionId == paddle1.getID()) && (firstColisionId == ball.getID() || secondColisionId == ball.getID())) {
-					mvRigh = !mvRigh;
-				}
-				if ((firstColisionId == paddle2.getID() || secondColisionId == paddle2.getID()) && (firstColisionId == ball.getID() || secondColisionId == ball.getID())) {
-					mvRigh = !mvRigh;
-				}
-				if ((firstColisionId == wall1.getID() || secondColisionId == wall1.getID()) && (firstColisionId == ball.getID() || secondColisionId == ball.getID())) {
-					if (mvUp) ball.translate({ 0.f, -offset, 0.f });
-					else ball.translate({ 0.f, offset, 0.f });
-					mvUp = !mvUp;
-				}
-				if ((firstColisionId == wall2.getID() || secondColisionId == wall2.getID()) && (firstColisionId == ball.getID() || secondColisionId == ball.getID())) {
-					if (mvUp) ball.translate({ 0.f, -offset, 0.f });
-					else ball.translate({ 0.f, offset, 0.f });
-					mvUp = !mvUp;
-				}
-			}
-			while (true) {
-				static ColisionPair colPair;
-				colPair = Colider::getLatestColision();
-				if (colPair.firstColider == 0 && colPair.secondColider == 0) break;
-			}
 			moveBall(ball);
 		}
 		processInput(camera, window);
