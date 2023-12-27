@@ -68,7 +68,8 @@ static unsigned int boxColiderVAO;
 static unsigned int boxColiderVBO;
 static unsigned int boxVerticesCount = sizeof(boxVertices) / sizeof(float);
 extern Shader* multiLightTextureShader;
-extern Shader* colorShader;
+//extern Shader* colorShader;
+extern Shader* newColorShader;
 
 glm::vec3 getPos(glm::mat4& mMatrix) {
 	return glm::vec3(mMatrix[3]);
@@ -86,21 +87,39 @@ void setBoxColiderVAOVBO() {
 
 void setShaderDrawProperties(Shader* shader, Camera* camera, glm::mat4& model, glm::mat4& view, glm::mat4& projection);
 
+//void BoxColider::draw(Camera* camera, glm::mat4& view, glm::mat4& projection) {
+//	if (visibility) {
+//		setShaderDrawProperties(colorShader, camera, modelMatrix, view, projection);
+//		colorShader->setVec3("color", { 0, 1, 0 });
+//		glBindVertexArray(boxColiderVAO);
+//		glDrawArrays(GL_TRIANGLES, 0, boxVerticesCount);
+//	}
+//}
+
 void BoxColider::draw(Camera* camera, glm::mat4& view, glm::mat4& projection) {
 	if (visibility) {
-		setShaderDrawProperties(colorShader, camera, modelMatrix, view, projection);
-		colorShader->setVec3("color", { 0, 1, 0 });
+		setShaderDrawProperties(newColorShader, camera, modelMatrix, view, projection);
+		newColorShader->setVec3("color", { 0, 1, 0 });
 		glBindVertexArray(boxColiderVAO);
 		glDrawArrays(GL_TRIANGLES, 0, boxVerticesCount);
 	}
 }
 
+//void SphereColider::draw(Camera* camera, glm::mat4& view, glm::mat4& projection) {
+//	if (visibility) {
+//		static Model sphereModel = Model("sphere.obj");
+//		setShaderDrawProperties(colorShader, camera, modelMatrix, view, projection);
+//		colorShader->setVec3("color", { 0, 1, 0 });
+//		sphereModel.Draw(*colorShader);
+//	}
+//}
+
 void SphereColider::draw(Camera* camera, glm::mat4& view, glm::mat4& projection) {
 	if (visibility) {
 		static Model sphereModel = Model("sphere.obj");
-		setShaderDrawProperties(colorShader, camera, modelMatrix, view, projection);
-		colorShader->setVec3("color", { 0, 1, 0 });
-		sphereModel.Draw(*colorShader);
+		setShaderDrawProperties(newColorShader, camera, modelMatrix, view, projection);
+		newColorShader->setVec3("color", { 0, 1, 0 });
+		sphereModel.Draw(*newColorShader);
 	}
 }
 
@@ -187,4 +206,17 @@ void SphereColisionExecutor::isColision(BoxColider* stationaryColider) {
 		if (glm::abs(deltaProjection) > sumExtents) isColision = false;
 	}
 	if (isColision) Colider::colisionList.push_back({ this->transformedColider->getLinkedObjectId(), stationaryColider->getLinkedObjectId() });
+}
+
+void Colision::DealWithColisions() {
+	static ColisionPair colisionPair, lastColisionPair;
+	while (true) {
+		colisionPair = Colider::GetLatestColision();
+		//ensures that 2 same, stacked collisions don't repeat
+		if (!colisionPair.equalTo(lastColisionPair)) {
+			DealWithColision(colisionPair);
+			lastColisionPair = colisionPair;
+		}
+		else break;
+	}
 }

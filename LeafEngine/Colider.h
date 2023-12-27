@@ -155,3 +155,10 @@ public:
 	void isColision(SphereColider* stationaryColider) override;
 	void isColision(BoxColider* stationaryColider) override; //approximate sphere as a box
 };
+
+static class Colision {
+protected:
+	static void DealWithColisions();
+public:
+	static void DealWithColision(ColisionPair& pair);
+};

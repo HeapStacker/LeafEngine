@@ -9,7 +9,7 @@ std::vector<RenderableObject*> RenderableObject::renderableObjects;
 static unsigned int lampObjectCount = 0;
 static unsigned int flashLightObjectCount = 0;
 Shader* multiLightTextureShader = nullptr;
-Shader* colorShader = nullptr;
+Shader* newColorShader = nullptr;
 static bool areLightsSet = false;
 
 struct VerticesData {
@@ -33,11 +33,11 @@ static void DeleteShaders() {
 	if (multiLightTextureShader) {
 		delete multiLightTextureShader;
 	}
-	if (colorShader) {
-		delete colorShader;
+	if (newColorShader) {
+		delete newColorShader;
 	}
 	multiLightTextureShader = nullptr;
-	colorShader = nullptr;
+	newColorShader = nullptr;
 }
 
 unsigned int RenderableObject::getID() { return id; }
@@ -67,6 +67,7 @@ Colider* RenderableObject::getColider() { return colisionBundle.colider; }
 void RenderableObject::SetSunDirection(const glm::vec3& direction) {
 	if (areLightsSet) {
 		multiLightTextureShader->setVec3("dirLight.direction", direction);
+		newColorShader->setVec3("dirLight.direction", direction);
 	}
 }
 
@@ -80,7 +81,7 @@ static void report(int crashId, std::string errorMessage) {
 void RenderableObject::SetLightProperties(const DirectionalLight& dirLight) {
 	if (!areLightsSet) {
 		multiLightTextureShader = new Shader("shaders/multiLight.vs", "shaders/multyLight.fs");
-		colorShader = new Shader("shaders/color.vs", "shaders/color.fs");
+		newColorShader = new Shader("shaders/newColorShader.vs", "shaders/newColorShader.fs");
 		multiLightTextureShader->use();
 		multiLightTextureShader->setInt("numOfPointLights", lampObjectCount);
 		multiLightTextureShader->setInt("numOfFlashLights", flashLightObjectCount);
@@ -91,6 +92,13 @@ void RenderableObject::SetLightProperties(const DirectionalLight& dirLight) {
 		multiLightTextureShader->setVec3("dirLight.ambient", dirLight.ambient);
 		multiLightTextureShader->setVec3("dirLight.diffuse", dirLight.diffuse);
 		multiLightTextureShader->setVec3("dirLight.specular", dirLight.specular);
+		newColorShader->use();
+		newColorShader->setInt("numOfPointLights", lampObjectCount);
+		newColorShader->setInt("numOfFlashLights", flashLightObjectCount);
+		newColorShader->setVec3("dirLight.direction", dirLight.direction);
+		newColorShader->setVec3("dirLight.ambient", dirLight.ambient);
+		newColorShader->setVec3("dirLight.diffuse", dirLight.diffuse);
+		newColorShader->setVec3("dirLight.specular", dirLight.specular);
 		areLightsSet = true;
 	}
 }
@@ -309,6 +317,8 @@ static void SetVaoVboMinimised(float* vertices, unsigned int& verticesSize, unsi
 	glBindVertexArray(vao);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 }
 
 static void SetVerticesMinimised(RenderableObject* renderableObject, float* vertices, unsigned int& verticesSize) {
@@ -350,6 +360,8 @@ void RenderableObject::turnToLamp(const glm::vec3& color, float lightMultiplier,
 		luminousProperties.lampID = ++lampObjectCount;
 		multiLightTextureShader->use();
 		multiLightTextureShader->setInt("numOfPointLights", lampObjectCount);
+		newColorShader->use();
+		newColorShader->setInt("numOfPointLights", lampObjectCount);
 		luminousProperties.color = color;
 		luminousProperties.lightMultiplier = lightMultiplier;
 		luminousProperties.attenuation = attenuation;
@@ -362,6 +374,8 @@ void RenderableObject::turnToSpotLight(const glm::vec3& direction, float innerCu
 		luminousProperties.flashLampID = ++flashLightObjectCount;
 		multiLightTextureShader->use();
 		multiLightTextureShader->setInt("numOfFlashLights", flashLightObjectCount);
+		newColorShader->use();
+		newColorShader->setInt("numOfFlashLights", flashLightObjectCount);
 		luminousProperties.direction = direction;
 		luminousProperties.innerCutOff = getSpotLightCutOff(innerCutOff);
 		luminousProperties.outerCutOff = getSpotLightCutOff(outerCutOff);
@@ -374,14 +388,19 @@ void RenderableObject::turnToSpotLight(const glm::vec3& direction, float innerCu
 
 void RenderableObject::applyLightToShader() {
 	static std::string lightId;
-	multiLightTextureShader->use();
 	if (luminousProperties.flashLampID) {
+		multiLightTextureShader->use();
 		lightId = "flashLights[" + std::to_string(luminousProperties.flashLampID - 1) + "]";
 		multiLightTextureShader->setVec3(lightId + ".direction", luminousProperties.direction);
 		multiLightTextureShader->setFloat(lightId + ".cutOff", luminousProperties.innerCutOff);
 		multiLightTextureShader->setFloat(lightId + ".outerCutOff", luminousProperties.outerCutOff);
+		newColorShader->use();
+		newColorShader->setVec3(lightId + ".direction", luminousProperties.direction);
+		newColorShader->setFloat(lightId + ".cutOff", luminousProperties.innerCutOff);
+		newColorShader->setFloat(lightId + ".outerCutOff", luminousProperties.outerCutOff);
 	}
 	else lightId = "pointLights[" + std::to_string(luminousProperties.lampID - 1) + "]";
+	multiLightTextureShader->use();
 	multiLightTextureShader->setVec3(lightId + ".position", getPosition());
 	multiLightTextureShader->setFloat(lightId + ".constant", luminousProperties.attenuation.constantMultiplier);
 	multiLightTextureShader->setFloat(lightId + ".linear", luminousProperties.attenuation.linearMultiplier);
@@ -389,6 +408,14 @@ void RenderableObject::applyLightToShader() {
 	multiLightTextureShader->setVec3(lightId + ".ambient", luminousProperties.color * luminousProperties.lightMultiplier);
 	multiLightTextureShader->setVec3(lightId + ".diffuse", luminousProperties.color);
 	multiLightTextureShader->setVec3(lightId + ".specular", luminousProperties.color);
+	newColorShader->use();
+	newColorShader->setVec3(lightId + ".position", getPosition());
+	newColorShader->setFloat(lightId + ".constant", luminousProperties.attenuation.constantMultiplier);
+	newColorShader->setFloat(lightId + ".linear", luminousProperties.attenuation.linearMultiplier);
+	newColorShader->setFloat(lightId + ".quadratic", luminousProperties.attenuation.quadraticMultiplier);
+	newColorShader->setVec3(lightId + ".ambient", luminousProperties.color * luminousProperties.lightMultiplier);
+	newColorShader->setVec3(lightId + ".diffuse", luminousProperties.color);
+	newColorShader->setVec3(lightId + ".specular", luminousProperties.color);
 }
 
 void RenderableObject::changeSpotLightDirection(const glm::vec3& direction) {
@@ -418,7 +445,6 @@ void RenderableObject::ProccesColisions(RenderableObject* transformedObject) {
 	}
 }
 
-//mož
 void RenderableObject::RenderObjects(GLFWwindow* window, Camera* camera) {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f); //make that the clear color can be changed somewhere
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -440,8 +466,8 @@ void RenderableObject::RenderObjects(GLFWwindow* window, Camera* camera) {
 			}
 		}
 		if (renderableObjects[i]->shaderType == 1) {
-			setShaderDrawProperties(colorShader, camera, renderableObjects[i]->modelMatrix, view, projection);
-			colorShader->setVec3("color", renderableObjects[i]->materialData.color);
+			setShaderDrawProperties(newColorShader, camera, renderableObjects[i]->modelMatrix, view, projection);
+			newColorShader->setVec3("color", renderableObjects[i]->materialData.color);
 			glBindVertexArray(renderableObjects[i]->materialData.VAO);
 			glDrawArrays(GL_TRIANGLES, 0, renderableObjects[i]->materialData.verticesCount);
 		}

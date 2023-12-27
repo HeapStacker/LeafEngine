@@ -55,6 +55,11 @@ void setLighting(const glm::vec3& sunDirection, AmbientMode mode)
 		dirLight.diffuse = { 1.0f, 1.0f, 1.0f };
 		dirLight.specular = { 0.4f, 0.7f, 0.1f };
 		break;
+	case NORMAL:
+		dirLight.ambient = { 0.5f, 0.5f, 0.5f };
+		dirLight.diffuse = { 0.5f, 0.5f, 0.5f };
+		dirLight.specular = { 0.f, 0.f, 0.f };
+		break;
 	default:
 		break;
 	}

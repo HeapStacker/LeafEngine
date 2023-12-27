@@ -38,11 +38,11 @@ void ContentInitializer::loadGlad() {
     glEnable(GL_DEPTH_TEST);
 }
 
-void ContentInitializer::setCoreSettings() {
+void ContentInitializer::setCoreSettings(bool& enableLookAround, bool& enableScroll) {
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
+    if (enableLookAround) glfwSetCursorPosCallback(window, mouse_callback);
+    if (enableScroll) glfwSetScrollCallback(window, scroll_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
@@ -53,12 +53,12 @@ ContentInitializer& ContentInitializer::GetInstance()
     return contentInitializer;
 }
 
-void ContentInitializer::setUp(const char* contentName, unsigned int windowWidth, unsigned int windowHeight, glm::vec3 cameraPos, float cameraFov, float cameraSensitivity) {
+void ContentInitializer::setUp(const char* contentName, unsigned int windowWidth, unsigned int windowHeight, bool enableLookAround, bool enableScroll, glm::vec3 cameraPos, float cameraFov, float cameraSensitivity) {
     initGLFW();
     setLastXY(windowWidth, windowHeight); //fix maby
     RenderableObject::SetWindowWidthHeight(windowWidth, windowHeight);
     window = createWindow(contentName, windowWidth, windowHeight);
-    setCoreSettings();
+    setCoreSettings(enableLookAround, enableScroll);
     loadGlad();
     camera = new Camera(cameraPos, cameraFov, cameraSensitivity);
 }

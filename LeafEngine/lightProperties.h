@@ -29,7 +29,8 @@ enum AmbientMode {
 	DESERT,
 	FACTORY,
 	HORROR,
-	BIOCHEMICAL_LAB
+	BIOCHEMICAL_LAB,
+	NORMAL
 };
 
 //unput is a number 0-11
