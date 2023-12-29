@@ -83,11 +83,11 @@ void RenderableObject::SetLightProperties(const DirectionalLight& dirLight) {
 		multiLightTextureShader = new Shader("shaders/multiLight.vs", "shaders/multyLight.fs");
 		newColorShader = new Shader("shaders/newColorShader.vs", "shaders/newColorShader.fs");
 		multiLightTextureShader->use();
-		multiLightTextureShader->setInt("numOfPointLights", lampObjectCount);
-		multiLightTextureShader->setInt("numOfFlashLights", flashLightObjectCount);
+		multiLightTextureShader->setFloat("material.shininess", 32.f);
 		multiLightTextureShader->setInt("material.texture_diffuse", 0);
 		multiLightTextureShader->setInt("material.texture_specular", 1); //create a better solution for more objects and different specular and diffuse maps
-		multiLightTextureShader->setFloat("material.shininess", 32.f);
+		multiLightTextureShader->setInt("numOfPointLights", lampObjectCount);
+		multiLightTextureShader->setInt("numOfFlashLights", flashLightObjectCount);
 		multiLightTextureShader->setVec3("dirLight.direction", dirLight.direction);
 		multiLightTextureShader->setVec3("dirLight.ambient", dirLight.ambient);
 		multiLightTextureShader->setVec3("dirLight.diffuse", dirLight.diffuse);
@@ -98,7 +98,6 @@ void RenderableObject::SetLightProperties(const DirectionalLight& dirLight) {
 		newColorShader->setVec3("dirLight.direction", dirLight.direction);
 		newColorShader->setVec3("dirLight.ambient", dirLight.ambient);
 		newColorShader->setVec3("dirLight.diffuse", dirLight.diffuse);
-		newColorShader->setVec3("dirLight.specular", dirLight.specular);
 		areLightsSet = true;
 	}
 }
@@ -197,16 +196,11 @@ glm::vec3 RenderableObject::getPosition() {
 RenderableObject::RenderableObject(std::string modelPath) {
 	if (areLightsSet) {
 		id = ++idAdder;
-		shaderType = 0;
 		model = new Model(modelPath);
 		RenderableObject::renderableObjects.push_back(this);
 	}
 	else report(4, "Light properties not set");
 }
-
-static std::vector<VerticesData> consumedVertices;
-static std::vector<DiffuseData> consumedDiffuseTextures;
-static std::vector<SpecularData> consumedSpecularTextures;
 
 static void SetVaoVbo(float* vertices, unsigned int& verticesSize, unsigned int& vao, unsigned int& vbo) {
 	glGenVertexArrays(1, &vao);
@@ -228,84 +222,17 @@ static void SetMaterialData(RenderableObject* renderableObject, unsigned int& va
 	renderableObject->materialData.verticesCount = verticesCount;
 }
 
-static bool AssignOrCreateDiffuseMap(RenderableObject* renderableObject, DiffuseData* data, const char* diffuseTexturePath, bool lastCreatedMap = false) {
-	if (data && data->diffusePath == diffuseTexturePath) { //validate if it's the same diffuse texture path
-		renderableObject->materialData.diffuseMap = data->diffuseMap; //set materials diffuse map
-		return true;
-	}
-	if (!data || data && data->diffusePath != diffuseTexturePath && lastCreatedMap) {
-		DiffuseData tempData = { diffuseTexturePath, loadTexture(diffuseTexturePath) };
-		consumedDiffuseTextures.push_back(tempData);
-		renderableObject->materialData.diffuseMap = tempData.diffuseMap;
-	}
-	return false;
-}
-
-static bool AssignOrCreateSpecularMap(RenderableObject* renderableObject, SpecularData* data, const char* specularTexturePath, bool lastCreatedMap = false) {
-	if (data && data->specularPath == specularTexturePath) { //validate if it's the same specular texture path
-		renderableObject->materialData.specularMap = data->specularMap; //set materials specular map
-		return true;
-	}
-	if (!data || data && data->specularPath != specularTexturePath && lastCreatedMap) {
-		SpecularData tempData = { specularTexturePath, loadTexture(specularTexturePath) };
-		consumedSpecularTextures.push_back(tempData);
-		renderableObject->materialData.specularMap = tempData.specularMap;
-	}
-	return false;
-}
-
-static void SetVertices(RenderableObject* renderableObject, float* vertices, unsigned int& verticesSize) {
-	unsigned int tempVao, tempVbo;
-	SetVaoVbo(vertices, verticesSize, tempVao, tempVbo);
-	VerticesData tempData = { vertices, verticesSize / sizeof(float), tempVao, tempVbo };
-	consumedVertices.push_back(tempData);
-	SetMaterialData(renderableObject, tempVao, tempVbo, verticesSize / sizeof(float));
-}
-
-static void AssignVertices(RenderableObject* renderableObject, float* vertices, unsigned int& verticesSize) {
-	bool areVerticesAssigned = false;
-	for (int i = 0; i < consumedVertices.size(); i++) {
-		if (consumedVertices[i].verticesCount == verticesSize / sizeof(float)) {
-			for (int j = 0; j < verticesSize / sizeof(float); j++) {
-				if (consumedVertices[i].vertices[j] != vertices[j]) break;
-				else {
-					if (j == verticesSize / sizeof(float) - 1) {
-						SetMaterialData(renderableObject, consumedVertices[i].VAO, consumedVertices[i].VBO, verticesSize / sizeof(float));
-						areVerticesAssigned = true;
-					}
-				}
-			}
-			if (areVerticesAssigned) break;
-		}
-	}
-	if (!areVerticesAssigned) {
-		SetVertices(renderableObject, vertices, verticesSize);
-	}
-}
-
 RenderableObject::RenderableObject(float* vertices, unsigned int verticesSize, const char* diffuseTexturePath, const char* specularTexturePath) {
 	if (areLightsSet) {
 		id = ++idAdder;
-		shaderType = 0;
-		static bool isFirstTime = true;
-		if (isFirstTime) {
-			AssignOrCreateDiffuseMap(this, nullptr, diffuseTexturePath, true);
-			AssignOrCreateSpecularMap(this, nullptr, specularTexturePath, true);
-			SetVertices(this, vertices, verticesSize);
-			isFirstTime = false;
-		}
-		else {
-			//this part of code checks if diffuse and specular textures alreay exist (set if exist, create and set if it doesn't exist)
-			for (int i = 0; i < consumedDiffuseTextures.size(); i++) {
-				if (AssignOrCreateDiffuseMap(this, &consumedDiffuseTextures[i], diffuseTexturePath, i + 1 == consumedDiffuseTextures.size())) break;
-			}
-			for (int i = 0; i < consumedSpecularTextures.size(); i++) {
-				if (AssignOrCreateSpecularMap(this, &consumedSpecularTextures[i], specularTexturePath, i + 1 == consumedSpecularTextures.size())) break;
-			}
-			AssignVertices(this, vertices, verticesSize);
-		}
+		unsigned int tempVao, tempVbo;
+		materialData.diffuseMap = loadTexture(diffuseTexturePath);
+		materialData.specularMap = loadTexture(specularTexturePath);
+		SetVaoVbo(vertices, verticesSize, tempVao, tempVbo);
+		VerticesData tempData = { vertices, verticesSize / sizeof(float), tempVao, tempVbo };
+		SetMaterialData(this, tempVao, tempVbo, verticesSize / sizeof(float));
 		RenderableObject::renderableObjects.push_back(this);
-	} 
+	}
 	else report(4, "Light properties not set");
 }
 
@@ -321,25 +248,15 @@ static void SetVaoVboMinimised(float* vertices, unsigned int& verticesSize, unsi
 	glEnableVertexAttribArray(1);
 }
 
-static void SetVerticesMinimised(RenderableObject* renderableObject, float* vertices, unsigned int& verticesSize) {
-	unsigned int tempVao, tempVbo;
-	SetVaoVboMinimised(vertices, verticesSize, tempVao, tempVbo);
-	VerticesData tempData = { vertices, verticesSize / sizeof(float), tempVao, tempVbo };
-	consumedVertices.push_back(tempData);
-	SetMaterialData(renderableObject, tempVao, tempVbo, verticesSize / sizeof(float));
-}
-
 RenderableObject::RenderableObject(float* vertices, unsigned int verticesSize, const glm::vec3& color) {
 	if (areLightsSet) {
 		id = ++idAdder;
-		shaderType = 1;
+		unsigned int tempVao, tempVbo;
 		static bool isFirstTime = true;
 		materialData.color = color;
-		if (isFirstTime) {
-			SetVerticesMinimised(this, vertices, verticesSize);
-			isFirstTime = false;
-		}
-		else AssignVertices(this, vertices, verticesSize);
+		SetVaoVboMinimised(vertices, verticesSize, tempVao, tempVbo);
+		VerticesData tempData = { vertices, verticesSize / sizeof(float), tempVao, tempVbo };
+		SetMaterialData(this, tempVao, tempVbo, verticesSize / sizeof(float));
 		RenderableObject::renderableObjects.push_back(this);
 	}
 	else report(4, "Light properties not set");
@@ -415,7 +332,6 @@ void RenderableObject::applyLightToShader() {
 	newColorShader->setFloat(lightId + ".quadratic", luminousProperties.attenuation.quadraticMultiplier);
 	newColorShader->setVec3(lightId + ".ambient", luminousProperties.color * luminousProperties.lightMultiplier);
 	newColorShader->setVec3(lightId + ".diffuse", luminousProperties.color);
-	newColorShader->setVec3(lightId + ".specular", luminousProperties.color);
 }
 
 void RenderableObject::changeSpotLightDirection(const glm::vec3& direction) {
@@ -450,29 +366,28 @@ void RenderableObject::RenderObjects(GLFWwindow* window, Camera* camera) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glm::mat4 projection = glm::perspective(glm::radians(camera->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f); //change the way of passing SCR_WIDTH & SCR_HEIGHT
 	glm::mat4 view = camera->GetViewMatrix();
-	for (int i = 0; i < RenderableObject::renderableObjects.size(); i++) {
-		if (renderableObjects[i]->shaderType == 0) {
-			setShaderDrawProperties(multiLightTextureShader, camera, renderableObjects[i]->modelMatrix, view, projection);
-			if (renderableObjects[i]->model) {
-				renderableObjects[i]->model->Draw(*multiLightTextureShader);
-			}
-			else {
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, renderableObjects[i]->materialData.diffuseMap);
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, renderableObjects[i]->materialData.specularMap);
-				glBindVertexArray(renderableObjects[i]->materialData.VAO);
-				glDrawArrays(GL_TRIANGLES, 0, renderableObjects[i]->materialData.verticesCount);
-			}
+	for (RenderableObject* rObj : renderableObjects) {
+		if (rObj->materialData.diffuseMap) {
+			setShaderDrawProperties(multiLightTextureShader, camera, rObj->modelMatrix, view, projection);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, rObj->materialData.diffuseMap);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, rObj->materialData.specularMap);
+			glBindVertexArray(rObj->materialData.VAO);
+			glDrawArrays(GL_TRIANGLES, 0, rObj->materialData.verticesCount);
 		}
-		if (renderableObjects[i]->shaderType == 1) {
-			setShaderDrawProperties(newColorShader, camera, renderableObjects[i]->modelMatrix, view, projection);
-			newColorShader->setVec3("color", renderableObjects[i]->materialData.color);
-			glBindVertexArray(renderableObjects[i]->materialData.VAO);
-			glDrawArrays(GL_TRIANGLES, 0, renderableObjects[i]->materialData.verticesCount);
+		else if (rObj->model) {
+			setShaderDrawProperties(multiLightTextureShader, camera, rObj->modelMatrix, view, projection);
+			rObj->model->Draw(*multiLightTextureShader);
 		}
-		if (renderableObjects[i]->colisionBundle.colider) {
-			renderableObjects[i]->colisionBundle.colider->draw(camera, view, projection);
+		else {
+			setShaderDrawProperties(newColorShader, camera, rObj->modelMatrix, view, projection);
+			newColorShader->setVec3("color", rObj->materialData.color);
+			glBindVertexArray(rObj->materialData.VAO);
+			glDrawArrays(GL_TRIANGLES, 0, rObj->materialData.verticesCount);
+		}
+		if (rObj->colisionBundle.colider) {
+			rObj->colisionBundle.colider->draw(camera, view, projection);
 		}
 	}
 	glfwSwapBuffers(window);

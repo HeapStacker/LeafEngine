@@ -38,6 +38,11 @@ void ContentInitializer::loadGlad() {
     glEnable(GL_DEPTH_TEST);
 }
 
+void ContentInitializer::setLastXY(unsigned int windowWidth, unsigned int windowHeight) {
+    lastX = (float)windowWidth;
+    lastY = (float)windowHeight;
+}
+
 void ContentInitializer::setCoreSettings(bool& enableLookAround, bool& enableScroll) {
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -61,6 +66,16 @@ void ContentInitializer::setUp(const char* contentName, unsigned int windowWidth
     setCoreSettings(enableLookAround, enableScroll);
     loadGlad();
     camera = new Camera(cameraPos, cameraFov, cameraSensitivity);
+}
+
+ContentInitializer::~ContentInitializer() {
+    delete camera;
+}
+
+void ContentInitializer::changeCamera(Camera* camera) {
+    delete(this->camera);
+    this->camera = nullptr;
+    this->camera = camera;
 }
 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height)

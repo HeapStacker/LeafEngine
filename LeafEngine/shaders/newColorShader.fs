@@ -5,7 +5,6 @@ struct DirLight {
     vec3 direction;
     vec3 ambient;
     vec3 diffuse;
-    vec3 specular;
 };
 
 struct PointLight {
@@ -15,7 +14,6 @@ struct PointLight {
     float quadratic;
     vec3 ambient;
     vec3 diffuse;
-    vec3 specular;
 };
 
 struct SpotLight {
@@ -27,8 +25,7 @@ struct SpotLight {
     float linear;
     float quadratic;
     vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;       
+    vec3 diffuse;     
 };
 
 #define MAX_POINT_LIGHTS 20
@@ -63,14 +60,24 @@ void main()
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 {
-    return light.ambient * color + light.diffuse * max(dot(normal, normalize(-light.direction)), 0.0) * color;
+    vec3 lightDir = normalize(-light.direction);
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 ambient = light.ambient * color;
+    vec3 diffuse = light.diffuse * diff * color;
+    return (ambient + diffuse);
 }
 
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
+    vec3 lightDir = normalize(light.position - fragPos);
+    float diff = max(dot(normal, lightDir), 0.0);
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
-    return light.ambient * color + light.diffuse * max(dot(normal, normalize(light.position - fragPos)), 0.0) * color * attenuation;
+    vec3 ambient = light.ambient * color;
+    vec3 diffuse = light.diffuse * diff * color;
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    return (ambient + diffuse);
 }
 
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)

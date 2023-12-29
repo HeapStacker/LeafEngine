@@ -50,7 +50,6 @@ class RenderableObject
 	glm::mat4 modelMatrix = glm::mat4(1.f);
 	LuminousObjectProperties luminousProperties;
 	ColisionBundle colisionBundle;
-	unsigned int shaderType = 0;
 	void applyLightToShader();
 public:
 	MaterialData materialData;

@@ -47,9 +47,29 @@ static float boxVertices[] = {
 	-0.5f,  0.5f, -0.5f
 };
 
+bool ColisionPair::equalTo(const ColisionPair& colisionPair) {
+	return colisionPair.targetedColider == targetedColider && colisionPair.transformedColider == transformedColider;
+}
+
 bool Colider::visibility = false;
 
 std::vector<ColisionPair> Colider::colisionList;
+
+Colider::Colider(const glm::mat4& setModelMatrix, unsigned int objectId) {
+	linkedObjectId = objectId;
+	modelMatrix = setModelMatrix;
+}
+
+unsigned int Colider::getLinkedObjectId() { return linkedObjectId; }
+
+void Colider::setPosition(const glm::vec3& position) {
+	modelMatrix = glm::mat4(1.f);
+	modelMatrix = glm::translate(modelMatrix, position);
+}
+
+void Colider::translate(const glm::vec3& position) {
+	this->setPosition(glm::vec3(modelMatrix[3]) + position);
+}
 
 void Colider::setVisibility(bool visible) {
 	Colider::visibility = visible;
@@ -68,8 +88,72 @@ static unsigned int boxColiderVAO;
 static unsigned int boxColiderVBO;
 static unsigned int boxVerticesCount = sizeof(boxVertices) / sizeof(float);
 extern Shader* multiLightTextureShader;
-//extern Shader* colorShader;
 extern Shader* newColorShader;
+
+BoxColider::BoxColider(glm::mat4& linkModelMatrix, unsigned int objectId)
+	:Colider(glm::scale(linkModelMatrix, { 1, 1, 1 }), objectId)
+{
+	static bool firstInit = true;
+	if (firstInit) { setBoxColiderVAOVBO(); firstInit = false; }
+	halfExtents = glm::vec3(1, 1, 1) / 2.f;
+}
+
+void BoxColider::acceptColisionExecution(ColisionExecutor* colisionExecutor) {
+	colisionExecutor->isColision(this);
+}
+
+void BoxColider::scale(float scalar) {
+	halfExtents *= scalar;
+	modelMatrix = glm::scale(modelMatrix, glm::vec3(scalar));
+}
+
+void BoxColider::scale(const glm::vec3& scalar) {
+	halfExtents *= scalar;
+	modelMatrix = glm::scale(modelMatrix, scalar);
+}
+
+void BoxColider::rotateAround(glm::vec3 axis, float degrees) {
+	modelMatrix = glm::rotate(modelMatrix, glm::radians(degrees), glm::normalize(axis));
+}
+
+SphereColider::SphereColider(glm::mat4& linkModelMatrix, unsigned int objectId)
+	:Colider(glm::scale(linkModelMatrix, glm::vec3(1)), objectId)
+{
+	this->radius = 1;
+}
+
+void SphereColider::acceptColisionExecution(ColisionExecutor* colisionExecutor) {
+	colisionExecutor->isColision(this);
+}
+
+void SphereColider::scale(float scalar) {
+	radius *= scalar;
+	modelMatrix = glm::scale(modelMatrix, glm::vec3(scalar));
+}
+
+void SphereColider::scale(const glm::vec3& scalar) {
+	std::cerr << "Cant scale sphere with vector scalar.\n";
+}
+
+void SphereColider::rotateAround(glm::vec3 axis, float degrees) {
+	std::cerr << "You cant really rotate an uniform sphere.\n";
+}
+
+BoxColisionExecutor::BoxColisionExecutor(BoxColider* transformedColider) {
+	if (transformedColider) this->transformedColider = transformedColider;
+	else {
+		std::cerr << "Accepted box colider = nullptr!\n";
+		exit(3);
+	}
+}
+
+SphereColisionExecutor::SphereColisionExecutor(SphereColider* transformedColider) {
+	if (transformedColider) this->transformedColider = transformedColider;
+	else {
+		std::cerr << "Accepted box colider = nullptr!\n";
+		exit(3);
+	}
+}
 
 glm::vec3 getPos(glm::mat4& mMatrix) {
 	return glm::vec3(mMatrix[3]);
@@ -87,15 +171,6 @@ void setBoxColiderVAOVBO() {
 
 void setShaderDrawProperties(Shader* shader, Camera* camera, glm::mat4& model, glm::mat4& view, glm::mat4& projection);
 
-//void BoxColider::draw(Camera* camera, glm::mat4& view, glm::mat4& projection) {
-//	if (visibility) {
-//		setShaderDrawProperties(colorShader, camera, modelMatrix, view, projection);
-//		colorShader->setVec3("color", { 0, 1, 0 });
-//		glBindVertexArray(boxColiderVAO);
-//		glDrawArrays(GL_TRIANGLES, 0, boxVerticesCount);
-//	}
-//}
-
 void BoxColider::draw(Camera* camera, glm::mat4& view, glm::mat4& projection) {
 	if (visibility) {
 		setShaderDrawProperties(newColorShader, camera, modelMatrix, view, projection);
@@ -104,15 +179,6 @@ void BoxColider::draw(Camera* camera, glm::mat4& view, glm::mat4& projection) {
 		glDrawArrays(GL_TRIANGLES, 0, boxVerticesCount);
 	}
 }
-
-//void SphereColider::draw(Camera* camera, glm::mat4& view, glm::mat4& projection) {
-//	if (visibility) {
-//		static Model sphereModel = Model("sphere.obj");
-//		setShaderDrawProperties(colorShader, camera, modelMatrix, view, projection);
-//		colorShader->setVec3("color", { 0, 1, 0 });
-//		sphereModel.Draw(*colorShader);
-//	}
-//}
 
 void SphereColider::draw(Camera* camera, glm::mat4& view, glm::mat4& projection) {
 	if (visibility) {
