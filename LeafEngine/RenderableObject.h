@@ -10,9 +10,13 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
-#include <glm/gtx/string_cast.hpp>
 #include "lightProperties.h"
+#include "GuiSelection.h"
 #include "Colider.h"
+
+void  clearGuiSelections();
+void setGuiSelectionsTorender(std::vector<unsigned int>& selectionIds);
+void addSelectionToRender(unsigned int selectionId);
 
 struct MaterialData {
 	unsigned int VAO;
@@ -47,8 +51,8 @@ class RenderableObject
 	unsigned int id;
 	Model* model = nullptr;
 	static std::vector<RenderableObject*> renderableObjects;
-	glm::mat4 modelMatrix = glm::mat4(1.f);
 	LuminousObjectProperties luminousProperties;
+	glm::mat4 modelMatrix = glm::mat4(1.f);
 	ColisionBundle colisionBundle;
 	void applyLightToShader();
 public:
@@ -60,6 +64,7 @@ public:
 	void scale(float scalar);
 	void scale(const glm::vec3& scalar);
 	void rotateAround(glm::vec3 axis, float degrees);
+	void changeColor(glm::vec3 color);
 	glm::vec3 getPosition();
 	RenderableObject() {}
 	RenderableObject(std::string modelPath);
@@ -70,12 +75,13 @@ public:
 	void turnToSpotLight(const glm::vec3& direction, float innerCutOff, float outerCutOff, const glm::vec3& color = {1.f, 1.f, 1.f}, float lightMultiplier = 1.f, const Attenuation& attenuation = getAttenuation(4));
 	void changeSpotLightDirection(const glm::vec3& direction);
 	static void Erase(unsigned int id);
+	void Erase();
 	static RenderableObject* FindById(unsigned int id);
 	static void RenderObjects(GLFWwindow* window, Camera* camera);
 	static void ProccesColisions(RenderableObject* transformedObject);
 	static void SetSunDirection(const glm::vec3& direction);
-	void setSphereColider();
-	void setBoxColider();
+	void setBoxColider(unsigned int coliderId = 1);
+	void setSphereColider(unsigned int coliderId = 1);
 	unsigned int getID();
 	Colider* getColider();
 };

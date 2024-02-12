@@ -63,12 +63,12 @@ Colider::Colider(const glm::mat4& setModelMatrix, unsigned int objectId) {
 unsigned int Colider::getLinkedObjectId() { return linkedObjectId; }
 
 void Colider::setPosition(const glm::vec3& position) {
-	modelMatrix = glm::mat4(1.f);
-	modelMatrix = glm::translate(modelMatrix, position);
+	modelMatrix[3] = glm::vec4({ position, 1 });
 }
 
+
 void Colider::translate(const glm::vec3& position) {
-	this->setPosition(glm::vec3(modelMatrix[3]) + position);
+	modelMatrix[3] = glm::vec4({ position + glm::vec3(modelMatrix[3]), 1 });
 }
 
 void Colider::setVisibility(bool visible) {

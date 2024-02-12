@@ -2,6 +2,7 @@
 #include "contentInitializer.h"
 #include "RenderableObject.h"
 #include "lightProperties.h"
+#include "GuiSelection.h"
 #include "FrameCapper.h"
 #include "camera.h"
 

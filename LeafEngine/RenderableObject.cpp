@@ -2,10 +2,15 @@
 #include <algorithm>
 #include "stb_image.h"
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 static unsigned int SCR_WIDTH;
 static unsigned int SCR_HEIGHT;
 static unsigned int idAdder = 0;
 std::vector<RenderableObject*> RenderableObject::renderableObjects;
+std::vector<unsigned int> guiSelectionsToRender;
 static unsigned int lampObjectCount = 0;
 static unsigned int flashLightObjectCount = 0;
 Shader* multiLightTextureShader = nullptr;
@@ -42,20 +47,26 @@ static void DeleteShaders() {
 
 unsigned int RenderableObject::getID() { return id; }
 
-void RenderableObject::setBoxColider() {
+void RenderableObject::setBoxColider(unsigned int coliderId) {
 	if (!colisionBundle.colider) {
-		colisionBundle.colider = new BoxColider(modelMatrix, id);
-		colisionBundle.colisionExecutor = new BoxColisionExecutor((BoxColider*)colisionBundle.colider);
+		if (coliderId) {
+			colisionBundle.colider = new BoxColider(modelMatrix, id);
+			colisionBundle.colisionExecutor = new BoxColisionExecutor((BoxColider*)colisionBundle.colider);
+		}
+		else std::cerr << "For the colliderId use the value of 1 or greater!\n";
 	}
 	else {
 		std::cerr << "Colider already set!\n";
 	}
 }
 
-void RenderableObject::setSphereColider() {
+void RenderableObject::setSphereColider(unsigned int coliderId) {
 	if (!colisionBundle.colider) {
-		colisionBundle.colider = new SphereColider(modelMatrix, getID());
-		colisionBundle.colisionExecutor = new SphereColisionExecutor((SphereColider*)colisionBundle.colider);
+		if (coliderId) {
+			colisionBundle.colider = new SphereColider(modelMatrix, coliderId);
+			colisionBundle.colisionExecutor = new SphereColisionExecutor((SphereColider*)colisionBundle.colider);
+		}
+		else std::cerr << "For the colliderId use the value of 1 or greater!\n";
 	}
 	else {
 		std::cerr << "Colider already set!\n";
@@ -148,17 +159,17 @@ RenderableObject* RenderableObject::FindById(unsigned int id) {
 }
 
 void RenderableObject::setPosition(const glm::vec3& position) {
-	static std::string lightId;
 	modelMatrix[3] = glm::vec4({ position, 1 });
 	if (luminousProperties.flashLampID || luminousProperties.lampID) applyLightToShader();
 	if (colisionBundle.colider) {
-		colisionBundle.colider->modelMatrix[3] = glm::vec4({ position, 1 });
+		colisionBundle.colider->setPosition(position);
 		ProccesColisions(this);
 	}
 }
 
 void RenderableObject::translate(const glm::vec3& position) {
-	this->setPosition(this->getPosition() + position);
+	modelMatrix[3] = glm::vec4({ position + glm::vec3(modelMatrix[3]), 1 });
+	if (luminousProperties.flashLampID || luminousProperties.lampID) applyLightToShader();
 	if (colisionBundle.colider) {
 		colisionBundle.colider->translate(position);
 		ProccesColisions(this);
@@ -187,6 +198,24 @@ void RenderableObject::rotateAround(glm::vec3 axis, float degrees) {
 		colisionBundle.colider->rotateAround(axis, degrees);
 		ProccesColisions(this);
 	}
+}
+
+void RenderableObject::changeColor(glm::vec3 color) {
+	materialData.color = color;
+}
+
+void clearGuiSelections() {
+	guiSelectionsToRender.clear();
+	guiSelectionsToRender.shrink_to_fit();
+}
+
+void setGuiSelectionsTorender(std::vector<unsigned int>& selectionIds) {
+	clearGuiSelections();
+	guiSelectionsToRender = selectionIds;
+}
+
+void addSelectionToRender(unsigned int selectionId) {
+	guiSelectionsToRender.push_back(selectionId);
 }
 
 glm::vec3 RenderableObject::getPosition() {
@@ -345,6 +374,11 @@ void RenderableObject::Erase(unsigned int id) {
 	RenderableObject::renderableObjects.erase(std::remove(RenderableObject::renderableObjects.begin(), RenderableObject::renderableObjects.end(), object), RenderableObject::renderableObjects.end());
 }
 
+//object isn't fully removed (only at the end of the program)
+void RenderableObject::Erase() {
+	RenderableObject::renderableObjects.erase(std::remove(RenderableObject::renderableObjects.begin(), RenderableObject::renderableObjects.end(), this), RenderableObject::renderableObjects.end());
+}
+
 void setShaderDrawProperties(Shader* shader, Camera* camera, glm::mat4& model, glm::mat4& view, glm::mat4& projection) {
 	shader->use();
 	shader->setVec3("viewPos", camera->Position);
@@ -364,6 +398,9 @@ void RenderableObject::ProccesColisions(RenderableObject* transformedObject) {
 void RenderableObject::RenderObjects(GLFWwindow* window, Camera* camera) {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f); //make that the clear color can be changed somewhere
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
 	glm::mat4 projection = glm::perspective(glm::radians(camera->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f); //change the way of passing SCR_WIDTH & SCR_HEIGHT
 	glm::mat4 view = camera->GetViewMatrix();
 	for (RenderableObject* rObj : renderableObjects) {
@@ -390,6 +427,13 @@ void RenderableObject::RenderObjects(GLFWwindow* window, Camera* camera) {
 			rObj->colisionBundle.colider->draw(camera, view, projection);
 		}
 	}
+	if (guiSelectionsToRender.size()) {
+		for (unsigned int& guiId : guiSelectionsToRender) {
+			GuiSelection::FindSelectionById(guiId)->renderElements();
+		}
+	}
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	glfwSwapBuffers(window);
 	glfwPollEvents();
 }

@@ -28,11 +28,11 @@ Attenuation getAttenuation(unsigned int lightPower)
 	else return attenuations[11];
 }
 
-void setLighting(const glm::vec3& sunDirection, AmbientMode mode)
+void setLighting(const glm::vec3& worldLightDirection, AmbientMode mode)
 {
 	DirectionalLight dirLight;
 	//should be done with polymorphism
-	dirLight.direction = sunDirection;
+	dirLight.direction = worldLightDirection;
 	switch (mode)
 	{
 	case DESERT:

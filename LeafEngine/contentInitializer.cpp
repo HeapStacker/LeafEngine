@@ -1,5 +1,8 @@
 #include "contentInitializer.h"
 #include "stb_image.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -43,12 +46,12 @@ void ContentInitializer::setLastXY(unsigned int windowWidth, unsigned int window
     lastY = (float)windowHeight;
 }
 
-void ContentInitializer::setCoreSettings(bool& enableLookAround, bool& enableScroll) {
+void ContentInitializer::setCoreSettings(bool enableLookAround, bool enableScroll, bool enableMouse) {
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     if (enableLookAround) glfwSetCursorPosCallback(window, mouse_callback);
     if (enableScroll) glfwSetScrollCallback(window, scroll_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    if (!enableMouse) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 //memory leak fixed
@@ -58,14 +61,38 @@ ContentInitializer& ContentInitializer::GetInstance()
     return contentInitializer;
 }
 
-void ContentInitializer::setUp(const char* contentName, unsigned int windowWidth, unsigned int windowHeight, bool enableLookAround, bool enableScroll, glm::vec3 cameraPos, float cameraFov, float cameraSensitivity) {
+#if _WIN32
+#include <Windows.h>
+static void getDesktopResolution(int& horizontal, int& vertical)
+{
+    RECT desktop;
+    const HWND hDesktop = GetDesktopWindow();
+    GetWindowRect(hDesktop, &desktop);
+    horizontal = desktop.right;
+    vertical = desktop.bottom;
+}
+#endif
+
+void ContentInitializer::setUp(const char* contentName, unsigned int windowWidth, unsigned int windowHeight, bool enableMouse, bool enableLookAround, bool enableScroll, glm::vec3 cameraPos, float cameraFov, float cameraSensitivity) {
     initGLFW();
     setLastXY(windowWidth, windowHeight); //fix maby
     RenderableObject::SetWindowWidthHeight(windowWidth, windowHeight);
     window = createWindow(contentName, windowWidth, windowHeight);
-    setCoreSettings(enableLookAround, enableScroll);
+#if _WIN32
+    int horizontal = 0;
+    int vertical = 0;
+    getDesktopResolution(horizontal, vertical);
+    glfwSetWindowPos(window, horizontal / 2 - windowWidth / 2, vertical / 2 - windowHeight / 2);
+#endif
+    setCoreSettings(enableLookAround, enableScroll, enableMouse);
     loadGlad();
     camera = new Camera(cameraPos, cameraFov, cameraSensitivity);
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
 }
 
 ContentInitializer::~ContentInitializer() {

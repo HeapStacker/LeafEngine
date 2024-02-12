@@ -14,7 +14,7 @@ class ContentInitializer
 {
     void initGLFW();
     GLFWwindow* createWindow(const char* windowName, int windowWidth, int windowHeight);
-    void setCoreSettings(bool& enableLookAround, bool& enableScroll);
+    void setCoreSettings(bool enableLookAround, bool enableScroll, bool enableMouse);
     void loadGlad();
     void setLastXY(unsigned int windowWidth, unsigned int windowHeight);
     ContentInitializer() {}
@@ -27,7 +27,7 @@ public:
     ContentInitializer(ContentInitializer& other) = delete;
     void operator=(const ContentInitializer&) = delete;
     static ContentInitializer& GetInstance();
-    void setUp(const char* contentName = "OpenGl Context", unsigned int windowWidth = 800, unsigned int windowHeight = 600, bool enableLookAround = false, bool enableScroll = false, glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f), float cameraFov = 45.f, float cameraSensitivity = 0.1f);
+    void setUp(const char* contentName = "OpenGl Context", unsigned int windowWidth = 800, unsigned int windowHeight = 600, bool enableMouse = false, bool enableLookAround = false, bool enableScroll = false, glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f), float cameraFov = 45.f, float cameraSensitivity = 0.1f);
     ~ContentInitializer();
     void changeCamera(Camera* camera);
 };
