@@ -1,0 +1,18 @@
+[submodule "LeafEngine/vendor/assimp"]
+	path = LeafEngine/vendor/assimp
+	url = https://github.com/assimp/assimp.git
+[submodule "LeafEngine/vendor/glfw"]
+	path = LeafEngine/vendor/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "LeafEngine/vendor/glad"]
+	path = LeafEngine/vendor/glad
+	url = https://github.com/ValtoLibraries/GLAD.git
+[submodule "LeafEngine/vendor/glm"]
+	path = LeafEngine/vendor/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "LeafEngine/vendor/imgui"]
+	path = LeafEngine/vendor/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "LeafEngine/vendor/stb"]
+	path = LeafEngine/vendor/stb
+	url = https://github.com/nothings/stb.git

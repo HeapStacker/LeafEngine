@@ -1,0 +1,22 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "C:\\Users\\marti\\OneDrive\\Radna površina\\programming\\LeafEngine\\build-int\\x64-Release\\LeafEngine\\Collider.h.obj",
+            "outputs": [
+                "C:\\Users\\marti\\OneDrive\\Radna površina\\programming\\LeafEngine\\build\\x64-Release\\LeafEngine\\LeafEngine.pdb",
+                "C:\\Users\\marti\\OneDrive\\Radna površina\\programming\\LeafEngine\\build-int\\x64-Release\\LeafEngine\\",
+                "C:\\Users\\marti\\OneDrive\\Radna površina\\programming\\LeafEngine\\build-int\\x64-Release\\LeafEngine\\Collider.h.ifc"
+            ],
+            "provides": [
+                {
+                    "logical-name": "src\\Collider.h",
+                    "source-path": "c:\\users\\marti\\onedrive\\radna površina\\programming\\leafengine\\leafengine\\src\\collider.h",
+                    "lookup-method": "absolute"
+                }
+            ],
+            "requires": []
+        }
+    ]
+}
