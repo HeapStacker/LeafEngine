@@ -1,16 +1,15 @@
-#include "TexturedBox.h"
-#include <stb_image.h>
-#include "ShaderImplementation.h"
-#include <glad/glad.h>
 #include <vector>
-#include "ModelLoader.h"
-
 #include "Window.h"
 #include "Camera.h"
+#include <glad/glad.h>
+#include <stb_image.h>
 #include <glm/glm.hpp>
+#include "TexturedBox.h"
+#include "ModelLoader.h"
+
 
 namespace lf {
-	static Shader& normalShader = getNormalShader();
+	static Shader& normalShader = Shader::getNormalShader();
 
 	static float texturedBoxVertices[] = {	
 		// positions			 // normals			        // texture coords
@@ -100,9 +99,14 @@ namespace lf {
 
 	void TexturedBox::RenderTexturedBoxes(glm::mat4& viewMatrix, glm::mat4& projectionMatrix)
 	{
-		setShaderDrawProperties(&normalShader, Camera::GetActiveCamera(), viewMatrix, projectionMatrix);
-		for (int i = 0; i < texturedBoxes.size(); i++) {
-			texturedBoxes[i]->render();
+		normalShader.use();
+		normalShader.setVec3("viewPos", Camera::GetActiveCamera()->Position);
+		normalShader.setMat4("projection", projectionMatrix);
+		normalShader.setMat4("view", viewMatrix);
+		for (TexturedBox* box : texturedBoxes) {
+			if (box->visible) {
+				box->render();
+			}
 		}
 	}
 
@@ -113,5 +117,15 @@ namespace lf {
 		diffuseMap = internal::TextureFromFile(diffuseTexturePath, ".");
 		specularMap = internal::TextureFromFile(specularTexturePath, ".");
 		texturedBoxes.push_back(this);
+	}
+
+	void TexturedBox::setVisibility(bool visible)
+	{
+		this->visible = visible;
+	}
+
+	void TexturedBox::remove()
+	{
+		texturedBoxes.erase(std::remove(texturedBoxes.begin(), texturedBoxes.end(), this), texturedBoxes.end());
 	}
 }

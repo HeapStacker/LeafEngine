@@ -1,10 +1,10 @@
 #include "DirectionalLight.h"
-#include "ShaderImplementation.h"
+#include "Shader.h"
 
 namespace lf {
 	static std::vector<DirectionalLight*> directionalLights;
-	static Shader& normalShader = getNormalShader();
-	static Shader& coloredShader = getColoredShader();
+	static Shader& normalShader = Shader::getNormalShader();
+	static Shader& coloredShader = Shader::getColoredShader();
 
 	void DirectionalLight::UpdateDirectionalLights()
 	{

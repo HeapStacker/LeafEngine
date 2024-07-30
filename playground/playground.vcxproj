@@ -190,6 +190,12 @@ xcopy /Y "$(ProjectDir)textures\*" "$(OutDir)textures\"</Command>
       <Project>{5c4ee005-52c6-46a4-be87-b793ec5b0fe6}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\multiLight.vs" />
+    <None Include="shaders\multyLight.fs" />
+    <None Include="shaders\newColorShader.fs" />
+    <None Include="shaders\newColorShader.vs" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

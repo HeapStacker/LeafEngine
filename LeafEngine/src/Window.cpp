@@ -1,9 +1,9 @@
 #include "Window.h"
+#include "Shader.h"
 #include "stb_image.h"
 #include "GuiSelection.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "ShaderImplementation.h"
 
 
 namespace lf {
@@ -46,13 +46,13 @@ namespace lf {
 			stbi_set_flip_vertically_on_load(true);
 			glEnable(GL_DEPTH_TEST);
 		}
-		initializeShaders();
+		Shader::initializeShaders();
 		if (firstCall) {
 			IMGUI_CHECKVERSION();
 			ImGui::CreateContext();
 			ImGuiIO& io = ImGui::GetIO();
-			//(void)io;
-			//ImGui::StyleColorsDark();
+			(void)io;
+			ImGui::StyleColorsDark();
 			ImGui_ImplGlfw_InitForOpenGL(Window::GetActiveWindow()->GetGLFWwindow(), true);
 			ImGui_ImplOpenGL3_Init("#version 330");
 

@@ -7,9 +7,12 @@ namespace lf {
 	class TexturedBox : public TransformableObject, public IdentifiableObject {
 		void setNewId() override;
 		unsigned int diffuseMap, specularMap;
+		bool visible = true;
 		void render();
 	public:
 		static void RenderTexturedBoxes(glm::mat4& viewMatrix, glm::mat4& projectionMatrix);
 		TexturedBox(const char* diffuseTexturePath, const char* specularTexturePath);
+		void setVisibility(bool visible);
+		void remove();
 	};
 }

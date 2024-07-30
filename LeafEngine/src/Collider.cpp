@@ -1,5 +1,5 @@
 #include "Collider.h"
-#include "ShaderImplementation.h"
+#include "Shader.h"
 #include "Camera.h"
 
 namespace lf {
@@ -182,7 +182,7 @@ namespace lf {
 		visible = visibility;
 	}
 
-	static Shader& coloredShader = getColoredShader();
+	static Shader& coloredShader = Shader::getColoredShader();
 
 	void Collider::render() {
 		coloredShader.setMat4("model", modelMatrix);
@@ -194,7 +194,10 @@ namespace lf {
 	void Collider::RenderColliders(glm::mat4& viewMatrix, glm::mat4& projectionMatrix)
 	{
 		if (visible) {
-			setShaderDrawProperties(&coloredShader, Camera::GetActiveCamera(), viewMatrix, projectionMatrix);
+			coloredShader.use();
+			coloredShader.setVec3("viewPos", Camera::GetActiveCamera()->Position);
+			coloredShader.setMat4("projection", projectionMatrix);
+			coloredShader.setMat4("view", viewMatrix);
 			for (Collider* col : colliders) {
 				col->render();
 			}

@@ -1,8 +1,8 @@
 #pragma once
-#include "DllExporter.h"
 #include <chrono>
 #include <thread>
 #include <iostream>
+#include "DllExporter.h"
 
 namespace lf {
 	class LF_LIB FrameCapper

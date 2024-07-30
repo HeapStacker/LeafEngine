@@ -1,12 +1,12 @@
-#include "ColoredBox.h"
-#include <glad/glad.h>
 #include <vector>
-
+#include "Shader.h"
 #include "Window.h"
 #include "Camera.h"
+#include <glad/glad.h>
+#include "ColoredBox.h"
 
 namespace lf {
-	static Shader& coloredShader = getColoredShader();
+	static Shader& coloredShader = Shader::getColoredShader();
 
 	static float coloredBoxVertices[] = {
 		// positions             // normals			
@@ -83,7 +83,10 @@ namespace lf {
 
 	void ColoredBox::RenderColoredBoxes(glm::mat4& viewMatrix, glm::mat4& projectionMatrix)
 	{
-		setShaderDrawProperties(&coloredShader, Camera::GetActiveCamera(), viewMatrix, projectionMatrix);
+		coloredShader.use();
+		coloredShader.setVec3("viewPos", Camera::GetActiveCamera()->Position);
+		coloredShader.setMat4("projection", projectionMatrix);
+		coloredShader.setMat4("view", viewMatrix);
 		for (ColoredBox* box : coloredBoxes) box->render();
 	}
 
@@ -93,6 +96,11 @@ namespace lf {
 		initializeColoredBox();
 		this->color = color;
 		coloredBoxes.push_back(this);
+	}
+
+	void ColoredBox::setVisibility(bool visible)
+	{
+		this->visible = visible;
 	}
 
 	void ColoredBox::render() {

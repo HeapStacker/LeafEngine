@@ -1,7 +1,6 @@
 #pragma once
 #include "Shader.h"
 #include "MoveableObject.h"
-#include "ShaderImplementation.h"
 
 namespace lf {
 	struct Attenuation {

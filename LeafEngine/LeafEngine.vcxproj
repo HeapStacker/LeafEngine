@@ -48,7 +48,6 @@
     <ClInclude Include="src\PointLight.h" />
     <ClInclude Include="src\RotateableObject.h" />
     <ClInclude Include="src\Shader.h" />
-    <ClInclude Include="src\ShaderImplementation.h" />
     <ClInclude Include="src\SpotLight.h" />
     <ClInclude Include="src\ScalableObject.h" />
     <ClInclude Include="src\TransformableObject.h" />
@@ -61,7 +60,6 @@
     <ClCompile Include="src\ColoredBox.cpp" />
     <ClCompile Include="src\DirectionalLight.cpp" />
     <ClCompile Include="src\KeyInput.cpp" />
-    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\PositionalLight.cpp" />
     <ClCompile Include="src\Mouse.cpp" />
@@ -72,7 +70,6 @@
     <ClCompile Include="src\PointLight.cpp" />
     <ClCompile Include="src\RotateableObject.cpp" />
     <ClCompile Include="src\Shader.cpp" />
-    <ClCompile Include="src\ShaderImplementation.cpp" />
     <ClCompile Include="src\SpotLight.cpp" />
     <ClCompile Include="src\Stb_image_introduction.cpp" />
     <ClCompile Include="src\ScalableObject.cpp" />

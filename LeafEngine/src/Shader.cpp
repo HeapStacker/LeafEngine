@@ -1,7 +1,69 @@
-#include "Shader.h"
 #include <vector>
+#include "Shader.h"
 
 namespace lf {
+    static Shader normalShader, coloredShader;
+
+    float Shader::nearPlane = 0.1f;
+    float Shader::farPlane = 100.f;
+
+    void Shader::ChangeDepthFunction(int depthFunction) {
+        glDepthFunc(depthFunction);
+    }
+
+    void Shader::ChangeNearFarPlaneValues(float nearPlane, float farPlane) {
+        if (nearPlane <= 0.f || farPlane <= 0.f || farPlane <= nearPlane) {
+            std::cerr << "Near and far plane mustn't be set exactly at 0 and far plane must be further away than near plane.\n";
+        }
+        else {
+            Shader::nearPlane = nearPlane;
+            Shader::farPlane = farPlane;
+            normalShader.use();
+            normalShader.setFloat("near", nearPlane);
+            normalShader.setFloat("far", farPlane);
+            coloredShader.use();
+            coloredShader.setFloat("near", nearPlane);
+            coloredShader.setFloat("far", farPlane);
+        }
+    }
+
+    void Shader::ChangeFogEffect(float steepness, float offset) {
+        normalShader.use();
+        normalShader.setFloat("steepness", steepness);
+        normalShader.setFloat("offset", offset);
+        coloredShader.use();
+        coloredShader.setFloat("steepness", steepness);
+        coloredShader.setFloat("offset", offset);
+    }
+
+    void Shader::initializeShaders() {
+        static bool firstCall = true;
+        if (firstCall) {
+            normalShader = Shader("shaders/multiLight.vs", "shaders/multyLight.fs");
+            coloredShader = Shader("shaders/newColorShader.vs", "shaders/newColorShader.fs");
+            normalShader.use();
+            normalShader.setFloat("material.shininess", 32.f);
+            normalShader.setInt("material.texture_diffuse", 0);
+            normalShader.setInt("material.texture_specular", 1);
+            normalShader.setInt("numOfDirLights", 0);
+            normalShader.setInt("numOfPointLights", 0);
+            normalShader.setInt("numOfFlashLights", 0);
+            coloredShader.use();
+            coloredShader.setInt("numOfDirLights", 0);
+            coloredShader.setInt("numOfPointLights", 0);
+            coloredShader.setInt("numOfFlashLights", 0);
+            firstCall = false;
+        }
+    }
+
+    Shader& Shader::getNormalShader() {
+        return normalShader;
+    }
+
+    Shader& Shader::getColoredShader() {
+        return coloredShader;
+    }
+
     Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath) {
         // 1. retrieve the vertex/fragment source code from filePath
         std::string vertexCode;

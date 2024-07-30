@@ -2,7 +2,6 @@
 #include "ScalableObject.h"
 #include "RotateableObject.h"
 #include "MoveableObject.h"
-#include "ShaderImplementation.h"
 
 namespace lf {
 	class TransformableObject : public ScalableObject, public RotateableObject, public MoveableObject {

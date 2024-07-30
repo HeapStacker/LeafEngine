@@ -1,5 +1,5 @@
 #include "Model.h"
-#include "ShaderImplementation.h"
+#include "Shader.h"
 #include <glad/glad.h>
 #include <vector>
 
@@ -12,7 +12,7 @@ namespace lf {
 		internal::ModelLoader model;
 	};
 
-	static Shader& normalShader = getNormalShader();
+	static Shader& normalShader = Shader::getNormalShader();
 
 	static unsigned int ModelId = 0;
 	static std::vector<ModelDictionary> modelDictionary;
@@ -31,8 +31,20 @@ namespace lf {
 
 	void Model::RenderModels(glm::mat4& viewMatrix, glm::mat4& projectionMatrix)
 	{
-		setShaderDrawProperties(&normalShader, Camera::GetActiveCamera(), viewMatrix, projectionMatrix);
-		for (Model* model : models) model->render();
+		normalShader.use();
+		normalShader.setVec3("viewPos", Camera::GetActiveCamera()->Position);
+		normalShader.setMat4("projection", projectionMatrix);
+		normalShader.setMat4("view", viewMatrix);
+		for (Model* model : models) {
+			if (model->visible) {
+				model->render();
+			}
+		}
+	}
+
+	void Model::setVisibility(bool visible)
+	{
+		this->visible = visible;
 	}
 
 	Model::Model(std::string modelPath)
@@ -48,5 +60,10 @@ namespace lf {
 			this->model = &modelDictionary.back().model;
 		}
 		models.push_back(this);
+	}
+
+	void Model::remove()
+	{
+		models.erase(std::remove(models.begin(), models.end(), this), models.end());
 	}
 }

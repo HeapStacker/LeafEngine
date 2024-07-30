@@ -19,4 +19,10 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\multiLight.vs" />
+    <None Include="shaders\multyLight.fs" />
+    <None Include="shaders\newColorShader.fs" />
+    <None Include="shaders\newColorShader.vs" />
+  </ItemGroup>
 </Project>

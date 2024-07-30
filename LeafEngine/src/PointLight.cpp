@@ -3,8 +3,8 @@
 
 namespace lf {
 	static std::vector<PointLight*> pointLights;
-	static Shader& normalShader = getNormalShader();
-	static Shader& coloredShader = getColoredShader();
+	static Shader& normalShader = Shader::getNormalShader();
+	static Shader& coloredShader = Shader::getColoredShader();
 
 	void PointLight::changeColor(glm::vec3 color)
 	{

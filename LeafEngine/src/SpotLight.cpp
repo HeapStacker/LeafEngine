@@ -1,12 +1,11 @@
-#include "ShaderImplementation.h"
 #include "SpotLight.h"
 #include <vector>
 
 namespace lf {
 	static unsigned int spotLightCount = 0;
 	static std::vector<SpotLight*> spotLights;
-	static Shader& normalShader = getNormalShader();
-	static Shader& coloredShader = getColoredShader();
+	static Shader& normalShader = Shader::getNormalShader();
+	static Shader& coloredShader = Shader::getColoredShader();
 
 	void SpotLight::UpdateSpotLights() {
 		normalShader.use();
