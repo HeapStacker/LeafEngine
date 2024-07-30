@@ -6,14 +6,14 @@ static unsigned int windowWidth = 800;
 static unsigned int windowHeight = 600;
 unsigned int fps = 60;
 bool moveF = false, moveL = false, moveR = false, moveB = false;
-Window gameWindow("Playground", windowWidth, windowHeight, "images/ico.png");
+Window gameWindow("Playground", windowWidth, windowHeight, "textures/ico.png");
 Camera gameCamera({ 0, 0, 3 });
 Mouse mouse(false, false, false);
 ColoredBox box({ 1.f, 1.f, 1.f });
 Model bird("models/bird/bird.obj");
-TexturedBox box1 = TexturedBox("textures/background.png", "textures/background.png");
-TexturedBox box2 = TexturedBox("textures/background.png", "textures/background.png");
-TexturedBox box3 = TexturedBox("textures/background.png", "textures/background.png");
+TexturedBox box1 = TexturedBox("textures/ico.png", "textures/ico.png");
+TexturedBox box2 = TexturedBox("textures/ico.png", "textures/ico.png");
+TexturedBox box3 = TexturedBox("textures/ico.png", "textures/ico.png");
 
 void processInput()
 {
@@ -26,6 +26,10 @@ void processInput()
 
 void colisionRulles(ColisionPair& pair) {
 	std::cout << "COLISION BETWEEN:\t" << pair.id1 << "\t" << pair.id2 << std::endl;
+}
+
+void sayHi() {
+	std::cout << "HI\n";
 }
 
 int main()
@@ -58,14 +62,16 @@ int main()
 	box2.scale(2.f);
 	box3.linkToRotation(&box1);
 
-	GuiContainer cont("win3", 10, 10, 400, 200);
-	cont.center();
+	GuiContainer cont("win3", 10, 10);
+	//cont.center();
 	Text txt("My transparent container");
 	CheckBox cb1("Free robux");
 	glm::vec3 color = { 0, 0, 0 };
 	ColorEditor edit("Pick a color", &color);
 	CheckBox cb2("Free robux for friends");
-	Button btn("dijsidjas", 40, 20);
+	Button btn("dijsidjas");
+	btn.setCallback(sayHi);
+	Image img("textures/image.png");
 
 	APPLICATION_THREAD_START
 	processInput();

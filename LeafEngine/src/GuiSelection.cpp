@@ -1,7 +1,8 @@
+#include "Window.h"
 #include <iostream>
+#include "ModelLoader.h"
 #include "GuiSelection.h"
 #include "imgui_impl_opengl3.h"
-#include "Window.h"
 
 namespace lf {
 
@@ -165,18 +166,37 @@ namespace lf {
 		this->clickedColor = clickedColor;
 	}
 	void Button::manifest() {
-		ImGui::SetNextItemWidth(width);
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, rounding);
 		ImGui::PushStyleColor(ImGuiCol_Button, baseColor);       
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoveredColor);
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, clickedColor); 
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0)); // Postavljanje paddinga na nulu
-		ImGui::Button(innerText, ImVec2(width, height));
+		if (ImGui::Button(innerText, ImVec2(width, height))) {
+			if (this->callback) {
+				this->callback();
+			}
+		}
 		ImGui::PopStyleVar();
 
 		ImGui::PopStyleColor(3);
 		ImGui::PopStyleVar();
 	}
 
+	Image::Image(const char* path, float width, float height) {
+		this->texture = internal::TextureFromFile(path, ".", false, true);
+		this->width = width;
+		this->height = height;
+		GuiContainer::containers.back()->addElement(this);
+	}
+	void Image::changeTexture(const char* path) {
+		this->texture = internal::TextureFromFile(path);
+	}
+	void Image::changeWidthHeight(float width, float height) {
+		this->width = width;
+		this->height = height;
+	}
+	void Image::manifest() {
+		ImGui::Image((void*)(intptr_t)this->texture, ImVec2(width, height));
+	}
 }

@@ -161,7 +161,7 @@ namespace lf {
             return textures;
         }
 
-        unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma)
+        unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma, bool flipBack)
         {
             std::string filename = std::string(path);
             filename = directory + '/' + filename;
@@ -170,6 +170,8 @@ namespace lf {
             glGenTextures(1, &textureID);
 
             int width, height, nrComponents;
+            stbi_set_flip_vertically_on_load(true);
+            if (flipBack) stbi_set_flip_vertically_on_load(false);
             unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
             if (data)
             {
