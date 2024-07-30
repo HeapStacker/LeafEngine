@@ -18,8 +18,9 @@ namespace lf {
         static void initializeShaders();
         static Shader& getNormalShader();
         static Shader& getColoredShader();
-        static float nearPlane, farPlane;
-
+        static float NearPlane, FarPlane;
+        // background color is also a fog color
+        static glm::vec3 BackgroundColor;
 
         // additional configuration...
         /*GL_ALWAYS	The depth test always passes.
@@ -35,6 +36,7 @@ namespace lf {
         // offset is a distance at which fog will start taking more effect
         // steepness is a value that coresponds to for growth per distance
         static void ChangeFogEffect(float steepness, float offset);
+        static void ChangeBackgroundColor(const glm::vec3& backgroundColor);
 
 
         // main shader functionality...

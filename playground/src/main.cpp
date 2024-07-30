@@ -42,7 +42,8 @@ int main()
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	FrameCapper::SetFrameCap(fps);
 	Shader::ChangeNearFarPlaneValues(0.1f, 20.f);
-	Shader::ChangeFogEffect(0.01f, 5.f);
+	Shader::ChangeFogEffect(0.2f, 5.f);
+	Shader::ChangeBackgroundColor({ 0.5f, 0.3f , 0.f });
 	DirectionalLight sun1({ 1.f, 1.f, 1.f });
 	Collider::SetVisibility(true);
 	Collider::AssignCollisionRules(colisionRulles);

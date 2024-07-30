@@ -4,8 +4,9 @@
 namespace lf {
     static Shader normalShader, coloredShader;
 
-    float Shader::nearPlane = 0.1f;
-    float Shader::farPlane = 100.f;
+    float Shader::NearPlane = 0.1f;
+    float Shader::FarPlane = 100.f;
+    glm::vec3 Shader::BackgroundColor = glm::vec3(0.f, 0.f, 0.f);
 
     void Shader::ChangeDepthFunction(int depthFunction) {
         glDepthFunc(depthFunction);
@@ -16,8 +17,8 @@ namespace lf {
             std::cerr << "Near and far plane mustn't be set exactly at 0 and far plane must be further away than near plane.\n";
         }
         else {
-            Shader::nearPlane = nearPlane;
-            Shader::farPlane = farPlane;
+            Shader::NearPlane = nearPlane;
+            Shader::FarPlane = farPlane;
             normalShader.use();
             normalShader.setFloat("near", nearPlane);
             normalShader.setFloat("far", farPlane);
@@ -34,6 +35,14 @@ namespace lf {
         coloredShader.use();
         coloredShader.setFloat("steepness", steepness);
         coloredShader.setFloat("offset", offset);
+    }
+
+    void Shader::ChangeBackgroundColor(const glm::vec3& backgroundColor) {
+        Shader::BackgroundColor = backgroundColor;
+        normalShader.use();
+        normalShader.setVec3("backgroundColor", backgroundColor);
+        coloredShader.use();
+        coloredShader.setVec3("backgroundColor", backgroundColor);
     }
 
     void Shader::initializeShaders() {

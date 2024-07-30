@@ -22,9 +22,9 @@ namespace lf {
 
 #define APPLICATION_THREAD_START while (!Window::GetActiveWindow()->shouldClose()) {\
 FrameCapper capper = FrameCapper();\
-glClearColor(0.f, 0.f, 0.f, 1.0f);\
+glClearColor(Shader::BackgroundColor.x, Shader::BackgroundColor.y, Shader::BackgroundColor.z, 1.0f);\
 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);\
-glm::mat4 projection = glm::perspective(glm::radians(Camera::GetActiveCamera()->Zoom), (float)Window::GetActiveWindow()->getWidth() / (float)Window::GetActiveWindow()->getHeight(), Shader::nearPlane, Shader::farPlane);\
+glm::mat4 projection = glm::perspective(glm::radians(Camera::GetActiveCamera()->Zoom), (float)Window::GetActiveWindow()->getWidth() / (float)Window::GetActiveWindow()->getHeight(), Shader::NearPlane, Shader::FarPlane);\
 glm::mat4 view = Camera::GetActiveCamera()->GetViewMatrix();\
 ImGui_ImplOpenGL3_NewFrame();\
 ImGui_ImplGlfw_NewFrame();\
