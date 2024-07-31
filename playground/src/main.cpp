@@ -77,7 +77,7 @@ int main()
 	CheckBox cb2("Free robux for friends");
 	Button btn("dijsidjas");
 	btn.setCallback(sayHi);
-	Image img("textures/image.png");
+	Image img("textures/image.png", 0.3f);
 
 	APPLICATION_THREAD_START
 	processInput();

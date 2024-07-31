@@ -45,9 +45,9 @@ namespace lf {
 			}
 			stbi_set_flip_vertically_on_load(true);
 			glEnable(GL_DEPTH_TEST);
-		}
-		Shader::initializeShaders();
-		if (firstCall) {
+
+			Shader::initializeShaders();
+
 			IMGUI_CHECKVERSION();
 			ImGui::CreateContext();
 			ImGuiIO& io = ImGui::GetIO();

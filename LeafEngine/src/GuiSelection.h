@@ -104,9 +104,11 @@ namespace lf {
 
 	class LF_LIB Image : public GuiElement {
 		unsigned int texture = 0;
-		float width, height;
+		int width, height;
+		float scale = 1.f;
 	public:
-		Image(const char* path, float width = 100.f, float height = 100.f);
+		Image(const char* path, float scale = 1.f);
+		void changeScale(float scale);
 		void changeTexture(const char* path);
 		void changeWidthHeight(float width, float height);
 		void manifest() override;

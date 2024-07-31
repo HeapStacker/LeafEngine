@@ -183,20 +183,22 @@ namespace lf {
 		ImGui::PopStyleVar();
 	}
 
-	Image::Image(const char* path, float width, float height) {
-		this->texture = internal::TextureFromFile(path, ".", false, true);
-		this->width = width;
-		this->height = height;
+	Image::Image(const char* path, float scale) {
+		this->scale = scale;
+		this->texture = internal::TextureFromFile(path, ".", this->width, this->height);
 		GuiContainer::containers.back()->addElement(this);
 	}
+	void Image::changeScale(float scale) {
+		this->scale = scale;
+	}
 	void Image::changeTexture(const char* path) {
-		this->texture = internal::TextureFromFile(path);
+		this->texture = internal::TextureFromFile(path, ".", this->width, this->height);
 	}
 	void Image::changeWidthHeight(float width, float height) {
 		this->width = width;
 		this->height = height;
 	}
 	void Image::manifest() {
-		ImGui::Image((void*)(intptr_t)this->texture, ImVec2(width, height));
+		ImGui::Image((void*)(intptr_t)this->texture, ImVec2(scale * width, scale * height));
 	}
 }
