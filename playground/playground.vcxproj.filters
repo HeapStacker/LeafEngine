@@ -24,5 +24,7 @@
     <None Include="shaders\multyLight.fs" />
     <None Include="shaders\newColorShader.fs" />
     <None Include="shaders\newColorShader.vs" />
+    <None Include="shaders\outline.fs" />
+    <None Include="shaders\outline.vs" />
   </ItemGroup>
 </Project>

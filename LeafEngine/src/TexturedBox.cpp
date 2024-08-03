@@ -1,131 +1,102 @@
 #include <vector>
 #include "Window.h"
 #include "Camera.h"
-#include <glad/glad.h>
 #include <stb_image.h>
 #include <glm/glm.hpp>
 #include "TexturedBox.h"
 #include "ModelLoader.h"
+#include "BoxVertices.h"
 
 
 namespace lf {
 	static Shader& normalShader = Shader::getNormalShader();
-
-	static float texturedBoxVertices[] = {	
-		// positions			 // normals			        // texture coords
-		-0.5f, -0.5f, -0.5f,	 0.0f,  0.0f, -1.0f,     0.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,	 0.0f,  0.0f, -1.0f,     1.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,	 0.0f,  0.0f, -1.0f,     1.0f,  1.0f,
-		 0.5f,  0.5f, -0.5f,	 0.0f,  0.0f, -1.0f,     1.0f,  1.0f,
-		-0.5f,  0.5f, -0.5f,	 0.0f,  0.0f, -1.0f,     0.0f,  1.0f,
-		-0.5f, -0.5f, -0.5f,	 0.0f,  0.0f, -1.0f,     0.0f,  0.0f,
-								 					     
-		-0.5f, -0.5f,  0.5f,	 0.0f,  0.0f,  1.0f,     0.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,     0.0f,  0.0f,  1.0f,     1.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,	 0.0f,  0.0f,  1.0f,     1.0f,  1.0f,
-		 0.5f,  0.5f,  0.5f,	 0.0f,  0.0f,  1.0f,     1.0f,  1.0f,
-		-0.5f,  0.5f,  0.5f,	 0.0f,  0.0f,  1.0f,     0.0f,  1.0f,
-		-0.5f, -0.5f,  0.5f,	 0.0f,  0.0f,  1.0f,     0.0f,  0.0f,
-								 					     
-		-0.5f,  0.5f,  0.5f,	 1.0f,  0.0f,  0.0f,     1.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,	 1.0f,  0.0f,  0.0f,     1.0f,  1.0f,
-		-0.5f, -0.5f, -0.5f,	 1.0f,  0.0f,  0.0f,     0.0f,  1.0f,
-		-0.5f, -0.5f, -0.5f,	 1.0f,  0.0f,  0.0f,     0.0f,  1.0f,
-		-0.5f, -0.5f,  0.5f,	 1.0f,  0.0f,  0.0f,     0.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f,	 1.0f,  0.0f,  0.0f,     1.0f,  0.0f,
-								 					     
-		 0.5f,  0.5f,  0.5f,	 1.0f,  0.0f,  0.0f,     1.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,	 1.0f,  0.0f,  0.0f,     1.0f,  1.0f,
-		 0.5f, -0.5f, -0.5f,	 1.0f,  0.0f,  0.0f,     0.0f,  1.0f,
-		 0.5f, -0.5f, -0.5f,	 1.0f,  0.0f,  0.0f,     0.0f,  1.0f,
-		 0.5f, -0.5f,  0.5f,	 1.0f,  0.0f,  0.0f,     0.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,	 1.0f,  0.0f,  0.0f,     1.0f,  0.0f,
-								 					     
-		-0.5f, -0.5f, -0.5f,	 0.0f, -1.0f,  0.0f,     0.0f,  1.0f,
-		 0.5f, -0.5f, -0.5f,	 0.0f, -1.0f,  0.0f,     1.0f,  1.0f,
-		 0.5f, -0.5f,  0.5f,	 0.0f, -1.0f,  0.0f,     1.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,	 0.0f, -1.0f,  0.0f,     1.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f,	 0.0f, -1.0f,  0.0f,     0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,	 0.0f, -1.0f,  0.0f,     0.0f,  1.0f,
-								 					     
-		-0.5f,  0.5f, -0.5f,	 0.0f,  1.0f,  0.0f,     0.0f,  1.0f,
-		 0.5f,  0.5f, -0.5f,	 0.0f,  1.0f,  0.0f,     1.0f,  1.0f,
-		 0.5f,  0.5f,  0.5f,	 0.0f,  1.0f,  0.0f,     1.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,	 0.0f,  1.0f,  0.0f,     1.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f,	 0.0f,  1.0f,  0.0f,     0.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,	 0.0f,  1.0f,  0.0f,     0.0f,  1.0f
-	};
+	static Shader& outlineShader = Shader::getOutlineShader();
 
 	static unsigned int TexturedBoxId = 0;
-	static std::vector<TexturedBox*> texturedBoxes;
+	static std::vector<TexturedBox*> boxes;
 
-	static unsigned int texturedBoxVao, texturedBoxVbo;
-	static unsigned int texturedBoxVerticesCount = 0;
-
-	static void initializeTexturedBox() {
-		static bool firstCall = true;
-		if (firstCall) {
-			glGenVertexArrays(1, &texturedBoxVao);
-			glGenBuffers(1, &texturedBoxVbo);
-			glBindBuffer(GL_ARRAY_BUFFER, texturedBoxVbo);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(texturedBoxVertices), texturedBoxVertices, GL_STATIC_DRAW); //or GL_DYNAMIC_DRAW for moving objects
-			glBindVertexArray(texturedBoxVao);
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-			glEnableVertexAttribArray(1);
-			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-			glEnableVertexAttribArray(2);
-			texturedBoxVerticesCount = sizeof(texturedBoxVertices) / sizeof(float);
-			firstCall = false;
-		}
-	}
-
-	void TexturedBox::setNewId()
-	{
+	void TexturedBox::setNewId() {
 		id = TexturedBoxId++;
 	}
 
-	void TexturedBox::render()
-	{
+	void TexturedBox::render() {
+		normalShader.use();
 		normalShader.setMat4("model", modelMatrix);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, diffuseMap);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, specularMap);
-		glBindVertexArray(texturedBoxVao);
-		glDrawArrays(GL_TRIANGLES, 0, texturedBoxVerticesCount);
+		if (outline) {
+			// we draw the object
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilMask(0xFF);
+
+			normalShader.use();
+			normalShader.setMat4("model", modelMatrix);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, diffuseMap);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, specularMap);
+			glBindVertexArray(getTexturedBoxVao());
+			glDrawArrays(GL_TRIANGLES, 0, getTexturedBoxVerticesCount());
+
+
+			// we scale the object but only draw the parts which were not drawn before
+			static float scale = 1.03f;
+			static glm::mat4 tempModel;
+			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+			glStencilMask(0x00);
+			tempModel = glm::scale(this->modelMatrix, glm::vec3(scale, scale, scale));
+			outlineShader.use();
+			outlineShader.setMat4("model", tempModel);
+			glBindVertexArray(getBoxVao());
+			glDrawArrays(GL_TRIANGLES, 0, getBoxVerticesCount());
+
+
+			// we return everything to default
+			glStencilMask(0xFF);
+			glStencilFunc(GL_ALWAYS, 0, 0xFF);
+		}
+		else {
+			glStencilMask(0x00);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, diffuseMap);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, specularMap);
+			glBindVertexArray(getTexturedBoxVao());
+			glDrawArrays(GL_TRIANGLES, 0, getTexturedBoxVerticesCount());
+		}
 	}
 
-	void TexturedBox::RenderTexturedBoxes(glm::mat4& viewMatrix, glm::mat4& projectionMatrix)
-	{
+	void TexturedBox::RenderTexturedBoxes(glm::mat4& viewMatrix, glm::mat4& projectionMatrix) {
 		normalShader.use();
 		normalShader.setVec3("viewPos", Camera::GetActiveCamera()->Position);
 		normalShader.setMat4("projection", projectionMatrix);
 		normalShader.setMat4("view", viewMatrix);
-		for (TexturedBox* box : texturedBoxes) {
+		outlineShader.use();
+		outlineShader.setMat4("projection", projectionMatrix);
+		outlineShader.setMat4("view", viewMatrix);
+		for (TexturedBox* box : boxes) {
 			if (box->visible) {
 				box->render();
 			}
 		}
 	}
 
-	TexturedBox::TexturedBox(const char* diffuseTexturePath, const char* specularTexturePath)
-	{
+	TexturedBox::TexturedBox(const glm::vec3& position, const char* diffuseTexturePath, const char* specularTexturePath) {
 		setNewId();
-		initializeTexturedBox();
+		initializeTexturedBoxVertices();
+		setPosition(position);
 		diffuseMap = internal::TextureFromFile(diffuseTexturePath, ".");
 		specularMap = internal::TextureFromFile(specularTexturePath, ".");
-		texturedBoxes.push_back(this);
+		boxes.push_back(this);
 	}
 
-	void TexturedBox::setVisibility(bool visible)
-	{
+	void TexturedBox::setVisibility(bool visible) {
 		this->visible = visible;
 	}
 
-	void TexturedBox::remove()
-	{
-		texturedBoxes.erase(std::remove(texturedBoxes.begin(), texturedBoxes.end(), this), texturedBoxes.end());
+	void TexturedBox::setOutline(bool outline) {
+		this->outline = outline;
+	}
+
+	void TexturedBox::remove() {
+		boxes.erase(std::remove(boxes.begin(), boxes.end(), this), boxes.end());
 	}
 }

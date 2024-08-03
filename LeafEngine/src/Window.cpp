@@ -45,6 +45,9 @@ namespace lf {
 			}
 			stbi_set_flip_vertically_on_load(true);
 			glEnable(GL_DEPTH_TEST);
+			glEnable(GL_STENCIL_TEST);
+			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 			Shader::initializeShaders();
 

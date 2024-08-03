@@ -8,6 +8,7 @@
 #include "DllExporter.h"
 #include "PointLight.h"
 #include "ColoredBox.h"
+#include <glad/glad.h>
 #include "SpotLight.h"
 #include "KeyInput.h"
 #include "Collider.h"
@@ -23,7 +24,7 @@ namespace lf {
 #define APPLICATION_THREAD_START while (!Window::GetActiveWindow()->shouldClose()) {\
 FrameCapper capper = FrameCapper();\
 glClearColor(Shader::BackgroundColor.x, Shader::BackgroundColor.y, Shader::BackgroundColor.z, 1.0f);\
-glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);\
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);\
 glm::mat4 projection = glm::perspective(glm::radians(Camera::GetActiveCamera()->Zoom), (float)Window::GetActiveWindow()->getWidth() / (float)Window::GetActiveWindow()->getHeight(), Shader::NearPlane, Shader::FarPlane);\
 glm::mat4 view = Camera::GetActiveCamera()->GetViewMatrix();\
 ImGui_ImplOpenGL3_NewFrame();\

@@ -2,111 +2,91 @@
 #include "Shader.h"
 #include "Window.h"
 #include "Camera.h"
-#include <glad/glad.h>
 #include "ColoredBox.h"
+#include "BoxVertices.h"
 
 namespace lf {
 	static Shader& coloredShader = Shader::getColoredShader();
-
-	static float coloredBoxVertices[] = {
-		// positions             // normals			
-		-0.5f, -0.5f, -0.5f,	 0.0f,  0.0f, -1.0f,
-		 0.5f, -0.5f, -0.5f,	 0.0f,  0.0f, -1.0f,
-		 0.5f,  0.5f, -0.5f,	 0.0f,  0.0f, -1.0f,
-		 0.5f,  0.5f, -0.5f,	 0.0f,  0.0f, -1.0f,
-		-0.5f,  0.5f, -0.5f,	 0.0f,  0.0f, -1.0f,
-		-0.5f, -0.5f, -0.5f,	 0.0f,  0.0f, -1.0f,
-
-		-0.5f, -0.5f,  0.5f,	 0.0f,  0.0f,  1.0f,
-		 0.5f, -0.5f,  0.5f,	 0.0f,  0.0f,  1.0f,
-		 0.5f,  0.5f,  0.5f,	 0.0f,  0.0f,  1.0f,
-		 0.5f,  0.5f,  0.5f,	 0.0f,  0.0f,  1.0f,
-		-0.5f,  0.5f,  0.5f,	 0.0f,  0.0f,  1.0f,
-		-0.5f, -0.5f,  0.5f,	 0.0f,  0.0f,  1.0f,
-
-		-0.5f,  0.5f,  0.5f,	-1.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,	-1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,	-1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,	-1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f,	-1.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f,	-1.0f,  0.0f,  0.0f,
-
-		 0.5f,  0.5f,  0.5f,	 1.0f,  0.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,	 1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,	 1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,	 1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,	 1.0f,  0.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,	 1.0f,  0.0f,  0.0f,
-
-		-0.5f, -0.5f, -0.5f,	 0.0f, -1.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,	 0.0f, -1.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,	 0.0f, -1.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,	 0.0f, -1.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f,	 0.0f, -1.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,	 0.0f, -1.0f,  0.0f,
-
-		-0.5f,  0.5f, -0.5f,	 0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,	 0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,	 0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,	 0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f,	 0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,	 0.0f,  1.0f,  0.0f
-	};
+	static Shader& outlineShader = Shader::getOutlineShader();
 
 	static unsigned int ColoredBoxId = 0;
-	static std::vector<ColoredBox*> coloredBoxes;
+	static std::vector<ColoredBox*> boxes;
 
-	void ColoredBox::setNewId()
-	{
+	void ColoredBox::setNewId() {
 		id = ColoredBoxId++;
 	}
 
-	static unsigned int coloredBoxVao, coloredBoxVbo;
-	static unsigned int coloredBoxVerticesCount = 0;
+	void ColoredBox::render() {
+		coloredShader.use();
+		coloredShader.setVec3("color", color);
+		coloredShader.setMat4("model", modelMatrix);
+		if (outline) {
 
-	static void initializeColoredBox() {
-		static bool firstCall = true;
-		if (firstCall) {
-			glGenVertexArrays(1, &coloredBoxVao);
-			glGenBuffers(1, &coloredBoxVbo);
-			glBindBuffer(GL_ARRAY_BUFFER, coloredBoxVbo);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(coloredBoxVertices), coloredBoxVertices, GL_STATIC_DRAW); //or GL_DYNAMIC_DRAW for moving objects
-			glBindVertexArray(coloredBoxVao);
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-			glEnableVertexAttribArray(1);
-			coloredBoxVerticesCount = sizeof(coloredBoxVertices) / sizeof(float);
-			firstCall = false;
+			// we draw the object
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilMask(0xFF);
+
+			coloredShader.use();
+			coloredShader.setMat4("model", modelMatrix);
+			glBindVertexArray(getBoxVao());
+			glDrawArrays(GL_TRIANGLES, 0, getBoxVerticesCount());
+
+
+			// we scale the object but only draw the parts which were not drawn before
+			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+			glStencilMask(0x00);
+
+			static float scale = 1.03f;
+			static glm::mat4 tempModel;
+			tempModel = glm::scale(this->modelMatrix, glm::vec3(scale, scale, scale));
+			outlineShader.use();
+			outlineShader.setMat4("model", tempModel);
+			glBindVertexArray(getBoxVao());
+			glDrawArrays(GL_TRIANGLES, 0, getBoxVerticesCount());
+
+
+			// we return everything to default
+			glStencilMask(0xFF);
+			glStencilFunc(GL_ALWAYS, 0, 0xFF);
+		}
+		else {
+			glStencilMask(0x00);
+			glBindVertexArray(getBoxVao());
+			glDrawArrays(GL_TRIANGLES, 0, getBoxVerticesCount());
 		}
 	}
 
-	void ColoredBox::RenderColoredBoxes(glm::mat4& viewMatrix, glm::mat4& projectionMatrix)
-	{
+	void ColoredBox::RenderColoredBoxes(glm::mat4& viewMatrix, glm::mat4& projectionMatrix) {
 		coloredShader.use();
 		coloredShader.setVec3("viewPos", Camera::GetActiveCamera()->Position);
 		coloredShader.setMat4("projection", projectionMatrix);
 		coloredShader.setMat4("view", viewMatrix);
-		for (ColoredBox* box : coloredBoxes) box->render();
+		outlineShader.use();
+		outlineShader.setMat4("projection", projectionMatrix);
+		outlineShader.setMat4("view", viewMatrix);
+		for (ColoredBox* box : boxes) {
+			if (box->visible) box->render();
+		}
 	}
 
-	ColoredBox::ColoredBox(const glm::vec3& color)
-	{
+	ColoredBox::ColoredBox(const glm::vec3& position, const glm::vec3& color) {
 		setNewId();
-		initializeColoredBox();
+		initializeBoxVertices();
+		setPosition(position);
 		this->color = color;
-		coloredBoxes.push_back(this);
+		boxes.push_back(this);
 	}
 
-	void ColoredBox::setVisibility(bool visible)
-	{
+	void ColoredBox::setVisibility(bool visible) {
 		this->visible = visible;
 	}
 
-	void ColoredBox::render() {
-		coloredShader.setVec3("color", color);
-		coloredShader.setMat4("model", modelMatrix);
-		glBindVertexArray(coloredBoxVao);
-		glDrawArrays(GL_TRIANGLES, 0, coloredBoxVerticesCount);
+	void ColoredBox::setOutline(bool outline) {
+		this->outline = outline;
 	}
+
+	void ColoredBox::remove() {
+		boxes.erase(std::remove(boxes.begin(), boxes.end(), this), boxes.end());
+	}
+
 }

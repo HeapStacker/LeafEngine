@@ -8,11 +8,11 @@ unsigned int fps = 60;
 Window gameWindow("Playground", windowWidth, windowHeight, "textures/ico.png");
 Camera gameCamera({ 0, 0, 0 });
 Mouse mouse(true, false, true);
-ColoredBox box({ 1.f, 1.f, 1.f });
+ColoredBox box({ 0, 0, -4 }, {0.5f, 0.f, 1.f});
 Model bird("models/bird/bird.obj");
-TexturedBox box1 = TexturedBox("textures/ico.png", "textures/ico.png");
-TexturedBox box2 = TexturedBox("textures/ico.png", "textures/ico.png");
-TexturedBox box3 = TexturedBox("textures/ico.png", "textures/ico.png");
+TexturedBox box1 = TexturedBox({ 2.f, 0, -15.f }, "textures/ico.png", "textures/ico.png");
+TexturedBox box2 = TexturedBox({ -1.f, 0, -15.f }, "textures/ico.png", "textures/ico.png");
+TexturedBox box3 = TexturedBox({ -2.f, 0, -15.f }, "textures/ico.png", "textures/ico.png");
 
 void processInput()
 {
@@ -45,12 +45,12 @@ int main()
 	Shader::ChangeFogEffect(0.2f, 5.f);
 	Shader::ChangeBackgroundColor({ 0.5f, 0.3f , 0.f });
 	DirectionalLight sun1({ 1.f, 1.f, 1.f });
-	Collider::SetVisibility(true);
+	//Collider::SetVisibility(true);
 	Collider::AssignCollisionRules(colisionRulles);
 
+	box.setOutline(true);
 	box.rotateAround({ 1, 1, 0 }, 45.f);
-	box.setPosition({ -5, 0, 1 });
-	bird.setPosition({ 3.f, 0.f, -10.f });
+	bird.setPosition({ 0.f, 0.f, -10.f });
 	bird.scale(0.3f);
 	bird.rotateAround({ 1, 0, 0 }, 270);
 	Collider col1 = Collider();
@@ -61,12 +61,10 @@ int main()
 	col2.linkToPosition(&box);
 	//PointLight lamp = PointLight(box.getPosition());
 	//lamp.linkToPosition(&box);
-	box1.setPosition({ 2.f, 0, -15.f });
-	box2.setPosition({ -1.f, 0, -15.f });
-	box3.setPosition({ -2.f, 0, -15.f });
 	box2.linkToRotation(&box1);
 	box2.scale(2.f);
 	box3.linkToRotation(&box1);
+	box3.setOutline(true);
 
 	GuiContainer cont("win3", 10, 10);
 	//cont.center();

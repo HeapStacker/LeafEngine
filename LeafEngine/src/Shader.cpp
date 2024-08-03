@@ -2,7 +2,7 @@
 #include "Shader.h"
 
 namespace lf {
-    static Shader normalShader, coloredShader;
+    static Shader normalShader, coloredShader, outlineShader;
 
     float Shader::NearPlane = 0.1f;
     float Shader::FarPlane = 100.f;
@@ -50,6 +50,7 @@ namespace lf {
         if (firstCall) {
             normalShader = Shader("shaders/multiLight.vs", "shaders/multyLight.fs");
             coloredShader = Shader("shaders/newColorShader.vs", "shaders/newColorShader.fs");
+            outlineShader = Shader("shaders/outline.vs", "shaders/outline.fs");
             normalShader.use();
             normalShader.setFloat("material.shininess", 32.f);
             normalShader.setInt("material.texture_diffuse", 0);
@@ -71,6 +72,10 @@ namespace lf {
 
     Shader& Shader::getColoredShader() {
         return coloredShader;
+    }
+
+    Shader& Shader::getOutlineShader() {
+        return outlineShader;
     }
 
     Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath) {

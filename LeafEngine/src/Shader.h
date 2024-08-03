@@ -18,6 +18,7 @@ namespace lf {
         static void initializeShaders();
         static Shader& getNormalShader();
         static Shader& getColoredShader();
+        static Shader& getOutlineShader();
         static float NearPlane, FarPlane;
         // background color is also a fog color
         static glm::vec3 BackgroundColor;
