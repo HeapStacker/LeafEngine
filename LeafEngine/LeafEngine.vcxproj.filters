@@ -23,7 +23,8 @@
     <ClInclude Include="src\TransformableObject.h" />
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\KeyInput.h" />
-    <ClInclude Include="src\BoxVertices.h" />
+    <ClInclude Include="src\Shapes.h" />
+    <ClInclude Include="src\TextureRect.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\FrameCapper.cpp" />
@@ -57,6 +58,7 @@
     <ClCompile Include="src\Collider.h" />
     <ClCompile Include="src\Collider.cpp" />
     <ClCompile Include="src\KeyInput.cpp" />
-    <ClCompile Include="src\BoxVertices.cpp" />
+    <ClCompile Include="src\Shapes.cpp" />
+    <ClCompile Include="src\TextureRect.cpp" />
   </ItemGroup>
 </Project>

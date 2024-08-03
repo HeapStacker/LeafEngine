@@ -8,11 +8,15 @@ unsigned int fps = 60;
 Window gameWindow("Playground", windowWidth, windowHeight, "textures/ico.png");
 Camera gameCamera({ 0, 0, 0 });
 Mouse mouse(true, false, true);
-ColoredBox box({ 0, 0, -4 }, {0.5f, 0.f, 1.f});
+ColoredBox box({ 1, 0, -4 }, {0.5f, 0.f, 1.f});
 Model bird("models/bird/bird.obj");
 TexturedBox box1 = TexturedBox({ 2.f, 0, -15.f }, "textures/ico.png", "textures/ico.png");
 TexturedBox box2 = TexturedBox({ -1.f, 0, -15.f }, "textures/ico.png", "textures/ico.png");
 TexturedBox box3 = TexturedBox({ -2.f, 0, -15.f }, "textures/ico.png", "textures/ico.png");
+TextureRect grass = TextureRect({-3, -1, -5}, "textures/grass.png", "textures/grass.png");
+TextureRect window1 = TextureRect({3, 0, -5}, "textures/transparentWindow.png", "textures/transparentWindow.png");
+TextureRect window2 = TextureRect({2, 0, -3}, "textures/transparentWindow.png", "textures/transparentWindow.png");
+TextureRect window3 = TextureRect({1, 0, -2}, "textures/transparentWindow.png", "textures/transparentWindow.png");
 
 void processInput()
 {
@@ -48,7 +52,8 @@ int main()
 	//Collider::SetVisibility(true);
 	Collider::AssignCollisionRules(colisionRulles);
 
-	box.setOutline(true);
+	//grass.setVisibility(false);
+	//box.setOutline(true);
 	box.rotateAround({ 1, 1, 0 }, 45.f);
 	bird.setPosition({ 0.f, 0.f, -10.f });
 	bird.scale(0.3f);
@@ -64,7 +69,7 @@ int main()
 	box2.linkToRotation(&box1);
 	box2.scale(2.f);
 	box3.linkToRotation(&box1);
-	box3.setOutline(true);
+	//box3.setOutline(true);
 
 	GuiContainer cont("win3", 10, 10);
 	//cont.center();

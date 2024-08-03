@@ -30,7 +30,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\BoxVertices.h" />
+    <ClInclude Include="src\TextureRect.h" />
+    <ClInclude Include="src\Shapes.h" />
     <ClInclude Include="src\ColoredBox.h" />
     <ClInclude Include="src\DirectionalLight.h" />
     <ClInclude Include="src\IdentifiableObject.h" />
@@ -55,7 +56,7 @@
     <ClInclude Include="src\Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\BoxVertices.cpp" />
+    <ClCompile Include="src\Shapes.cpp" />
     <ClCompile Include="src\Collider.cpp" />
     <ClCompile Include="src\Collider.h" />
     <ClCompile Include="src\Camera.cpp" />
@@ -77,6 +78,7 @@
     <ClCompile Include="src\ScalableObject.cpp" />
     <ClCompile Include="src\TexturedBox.cpp" />
     <ClCompile Include="src\TexturedBox.h" />
+    <ClCompile Include="src\TextureRect.cpp" />
     <ClCompile Include="src\TransformableObject.cpp" />
     <ClCompile Include="vendor\glad\GL\src\glad.c" />
     <ClCompile Include="vendor\imgui\GLFWBackendHere\imgui.cpp" />

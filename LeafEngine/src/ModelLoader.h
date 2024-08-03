@@ -9,7 +9,7 @@
 
 namespace lf {
     namespace internal {
-        unsigned int TextureFromFile(const char* path, const std::string& directory = ".");
+        unsigned int TextureFromFile(const char* path, const std::string& directory = ".", bool *transparent = nullptr);
         unsigned int TextureFromFile(const char* path, const std::string& directory, int& width, int& height);
 
         class ModelLoader

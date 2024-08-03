@@ -161,7 +161,8 @@ namespace lf {
             return textures;
         }
 
-        unsigned int TextureFromFile(const char* path, const std::string& directory) {
+        unsigned int TextureFromFile(const char* path, const std::string& directory, bool* transparent) {
+            if (transparent) *transparent = false;
             std::string filename = std::string(path);
             filename = directory + '/' + filename;
 
@@ -173,19 +174,25 @@ namespace lf {
             if (data)
             {
                 GLenum format;
-                if (nrComponents == 1)
+                GLint param = GL_REPEAT;
+                if (nrComponents == 1) {
                     format = GL_RED;
-                else if (nrComponents == 3)
+                }
+                else if (nrComponents == 3) {
                     format = GL_RGB;
-                else if (nrComponents == 4)
+                }
+                else if (nrComponents == 4) {
+                    if (transparent) *transparent = true;
                     format = GL_RGBA;
+                    param = GL_CLAMP_TO_EDGE; // so that transparent corners don't get colored
+                    // param bi trebao biti GL_REPEAT za transparentne teksture koje se ponavljaju a to nije još postavljeno
+                }
 
                 glBindTexture(GL_TEXTURE_2D, textureID);
                 glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
                 glGenerateMipmap(GL_TEXTURE_2D);
-
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, param);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, param);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 

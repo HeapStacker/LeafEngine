@@ -6,6 +6,7 @@
 #include "TexturedBox.h"
 #include "FrameCapper.h"
 #include "DllExporter.h"
+#include "TextureRect.h"
 #include "PointLight.h"
 #include "ColoredBox.h"
 #include <glad/glad.h>
@@ -34,6 +35,8 @@ ImGui::NewFrame();
 #define APPLICATION_THREAD_END ColoredBox::RenderColoredBoxes(view, projection);\
 TexturedBox::RenderTexturedBoxes(view, projection);\
 Model::RenderModels(view, projection);\
+TextureRect::RenderRects(view, projection);\
+TextureRect::RenderTransparentRects(view, projection);\
 Collider::RenderColliders(view, projection);\
 GuiContainer::RenderGui();\
 Collider::CheckForCollisions();\

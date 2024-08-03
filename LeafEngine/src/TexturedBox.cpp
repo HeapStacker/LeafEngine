@@ -5,12 +5,14 @@
 #include <glm/glm.hpp>
 #include "TexturedBox.h"
 #include "ModelLoader.h"
-#include "BoxVertices.h"
+#include "Shapes.h"
 
 
 namespace lf {
 	static Shader& normalShader = Shader::getNormalShader();
 	static Shader& outlineShader = Shader::getOutlineShader();
+	static unsigned int BoxVerticesCount = getBoxVerticesCount();
+	static unsigned int TexturedBoxVerticesCount = getTexturedBoxVerticesCount();
 
 	static unsigned int TexturedBoxId = 0;
 	static std::vector<TexturedBox*> boxes;
@@ -34,7 +36,7 @@ namespace lf {
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, specularMap);
 			glBindVertexArray(getTexturedBoxVao());
-			glDrawArrays(GL_TRIANGLES, 0, getTexturedBoxVerticesCount());
+			glDrawArrays(GL_TRIANGLES, 0, TexturedBoxVerticesCount);
 
 
 			// we scale the object but only draw the parts which were not drawn before
@@ -46,7 +48,7 @@ namespace lf {
 			outlineShader.use();
 			outlineShader.setMat4("model", tempModel);
 			glBindVertexArray(getBoxVao());
-			glDrawArrays(GL_TRIANGLES, 0, getBoxVerticesCount());
+			glDrawArrays(GL_TRIANGLES, 0, BoxVerticesCount);
 
 
 			// we return everything to default
@@ -60,7 +62,7 @@ namespace lf {
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, specularMap);
 			glBindVertexArray(getTexturedBoxVao());
-			glDrawArrays(GL_TRIANGLES, 0, getTexturedBoxVerticesCount());
+			glDrawArrays(GL_TRIANGLES, 0, TexturedBoxVerticesCount);
 		}
 	}
 

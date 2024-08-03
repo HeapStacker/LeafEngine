@@ -3,11 +3,12 @@
 #include "Window.h"
 #include "Camera.h"
 #include "ColoredBox.h"
-#include "BoxVertices.h"
+#include "Shapes.h"
 
 namespace lf {
 	static Shader& coloredShader = Shader::getColoredShader();
 	static Shader& outlineShader = Shader::getOutlineShader();
+	static unsigned int BoxVerticesCount = getBoxVerticesCount();
 
 	static unsigned int ColoredBoxId = 0;
 	static std::vector<ColoredBox*> boxes;
@@ -29,7 +30,7 @@ namespace lf {
 			coloredShader.use();
 			coloredShader.setMat4("model", modelMatrix);
 			glBindVertexArray(getBoxVao());
-			glDrawArrays(GL_TRIANGLES, 0, getBoxVerticesCount());
+			glDrawArrays(GL_TRIANGLES, 0, BoxVerticesCount);
 
 
 			// we scale the object but only draw the parts which were not drawn before
@@ -42,7 +43,7 @@ namespace lf {
 			outlineShader.use();
 			outlineShader.setMat4("model", tempModel);
 			glBindVertexArray(getBoxVao());
-			glDrawArrays(GL_TRIANGLES, 0, getBoxVerticesCount());
+			glDrawArrays(GL_TRIANGLES, 0, BoxVerticesCount);
 
 
 			// we return everything to default
@@ -52,7 +53,7 @@ namespace lf {
 		else {
 			glStencilMask(0x00);
 			glBindVertexArray(getBoxVao());
-			glDrawArrays(GL_TRIANGLES, 0, getBoxVerticesCount());
+			glDrawArrays(GL_TRIANGLES, 0, BoxVerticesCount);
 		}
 	}
 
