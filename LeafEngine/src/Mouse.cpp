@@ -31,7 +31,7 @@ namespace lf {
 	}
 
 	void Mouse::MouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
-		static bool firstCall = false;
+		static bool firstCall = true;
 		float xpos = static_cast<float>(xposIn);
 		float ypos = static_cast<float>(yposIn);
 		if (firstCall) {
