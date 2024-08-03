@@ -7,7 +7,7 @@ static unsigned int windowHeight = 600;
 unsigned int fps = 60;
 Window gameWindow("Playground", windowWidth, windowHeight, "textures/ico.png");
 Camera gameCamera({ 0, 0, 0 });
-Mouse mouse(true, false, true);
+Mouse mouse(true, false, false);
 ColoredBox box({ 1, 0, -4 }, {0.5f, 0.f, 1.f});
 Model bird("models/bird/bird.obj");
 TexturedBox box1 = TexturedBox({ 2.f, 0, -15.f }, "textures/ico.png", "textures/ico.png");
@@ -85,6 +85,7 @@ int main()
 	APPLICATION_THREAD_START
 	processInput();
 	box1.rotateAround({ 0, 0, 1 }, 1);
+	
 	APPLICATION_THREAD_END
 
 	return 0;

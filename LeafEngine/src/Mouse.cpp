@@ -1,6 +1,8 @@
 #include "Mouse.h"
 #include "Window.h"
 #include "Camera.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 namespace lf {
 	//there can be more mouse styles so that you can make more mouse classes
@@ -34,13 +36,16 @@ namespace lf {
 		static bool firstCall = true;
 		float xpos = static_cast<float>(xposIn);
 		float ypos = static_cast<float>(yposIn);
+
 		if (firstCall) {
 			Mouse::position.x = xpos;
 			Mouse::position.y = ypos;
 			firstCall = false;
 		}
+
 		Camera::GetActiveCamera()->ProcessMouseMovement(xpos - Mouse::position.x, Mouse::position.y - ypos);
 		Mouse::position.x = xpos;
 		Mouse::position.y = ypos;
+		ImGui_ImplGlfw_CursorPosCallback(Window::GetActiveWindow()->GetGLFWwindow(), xpos, ypos);
 	}
 }
