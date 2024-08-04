@@ -7,7 +7,7 @@ static unsigned int windowHeight = 600;
 unsigned int fps = 60;
 Window gameWindow("Playground", windowWidth, windowHeight, "textures/ico.png");
 Camera gameCamera({ 0, 0, 0 });
-Mouse mouse(true, false, false);
+Mouse mouse(true, false, true);
 ColoredBox box({ 1, 0, -4 }, {0.5f, 0.f, 1.f});
 Model bird("models/bird/bird.obj");
 TexturedBox box1 = TexturedBox({ 2.f, 0, -15.f }, "textures/ico.png", "textures/ico.png");
