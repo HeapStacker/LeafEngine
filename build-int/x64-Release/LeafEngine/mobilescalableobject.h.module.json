@@ -1,0 +1,22 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "C:\\Users\\marti\\OneDrive\\Radna površina\\programming\\LeafEngine\\build-int\\x64-Release\\LeafEngine\\MobileScalableObject.h.obj",
+            "outputs": [
+                "C:\\Users\\marti\\OneDrive\\Radna površina\\programming\\LeafEngine\\build\\x64-Release\\LeafEngine\\LeafEngine.pdb",
+                "C:\\Users\\marti\\OneDrive\\Radna površina\\programming\\LeafEngine\\build-int\\x64-Release\\LeafEngine\\",
+                "C:\\Users\\marti\\OneDrive\\Radna površina\\programming\\LeafEngine\\build-int\\x64-Release\\LeafEngine\\MobileScalableObject.h.ifc"
+            ],
+            "provides": [
+                {
+                    "logical-name": "src\\MobileScalableObject.h",
+                    "source-path": "c:\\users\\marti\\onedrive\\radna površina\\programming\\leafengine\\leafengine\\src\\mobilescalableobject.h",
+                    "lookup-method": "absolute"
+                }
+            ],
+            "requires": []
+        }
+    ]
+}

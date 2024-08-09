@@ -18,14 +18,9 @@ namespace lf {
 	static std::vector<ModelDictionary> modelDictionary;
 	static std::vector<Model*> models;
 
-	void Model::setNewId()
-	{
-		id = ModelId++;
-	}
-
 	void Model::render()
 	{
-		normalShader.setMat4("model", modelMatrix);
+		normalShader.setMat4("model", this->SpatialObject::modelMatrix);
 		model->Draw(normalShader);
 	}
 
@@ -49,7 +44,6 @@ namespace lf {
 
 	Model::Model(std::string modelPath)
 	{
-		setNewId();
 		for (ModelDictionary& model : modelDictionary) {
 			if (model.modelPath == modelPath) {
 				this->model = &model.model;

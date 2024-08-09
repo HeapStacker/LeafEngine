@@ -5,6 +5,10 @@ namespace lf {
 	unsigned int&& getRectangleVerticesCount();
 	unsigned int& getRectangleVao();
 
+	void initializeMinimalBoxVertices();
+	unsigned int&& getMinimalBoxVerticesCount();
+	unsigned int& getMinimalBoxVao();
+
 	void initializeBoxVertices();
 	unsigned int&& getBoxVerticesCount();
 	unsigned int& getBoxVao();

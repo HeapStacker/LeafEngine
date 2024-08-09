@@ -1,52 +1,41 @@
 #include "PointLight.h"
+#include "Shader.h"
 #include <vector>
 
 namespace lf {
-	static std::vector<PointLight*> pointLights;
 	static Shader& normalShader = Shader::getNormalShader();
 	static Shader& coloredShader = Shader::getColoredShader();
+	static unsigned int IdCounter = 0;
 
-	void PointLight::changeColor(glm::vec3 color)
+	PointLight::PointLight(glm::vec3 position, glm::vec3 color, unsigned int intensity)
 	{
-		this->color = color;
+		id = IdCounter++;
+		Light::changeColor(color);
+		MovableObject::setPosition(position);
+		changeIntensity(intensity);
+		update();
 	}
 
-	void PointLight::changeAmbientMultiplier(float ambientMultiplier)
+	void PointLight::update()
 	{
-		this->ambientMultiplier = ambientMultiplier;
-	}
-
-	void PointLight::UpdatePointLights() {
-		normalShader.use();
-		normalShader.setInt("numOfPointLights", pointLights.size());
-		coloredShader.use();
-		coloredShader.setInt("numOfPointLights", pointLights.size());
 		static std::string lightId;
-		for (int i = 0; i < pointLights.size(); i++) {
-			lightId = "pointLights[" + std::to_string(i) + "]";
-			normalShader.use();
-			normalShader.setVec3(lightId + ".position", pointLights[i]->getPosition());
-			changeShaderLightAttenuation(lightId, normalShader, pointLights[i]->attenuation);
-			normalShader.setVec3(lightId + ".ambient", pointLights[i]->color * pointLights[i]->ambientMultiplier);
-			normalShader.setVec3(lightId + ".diffuse", pointLights[i]->color);
-			normalShader.setVec3(lightId + ".specular", pointLights[i]->color);
-
-			coloredShader.use();
-			coloredShader.setVec3(lightId + ".position", pointLights[i]->getPosition());
-			changeShaderLightAttenuation(lightId, coloredShader, pointLights[i]->attenuation);
-			coloredShader.setVec3(lightId + ".ambient", pointLights[i]->color * pointLights[i]->ambientMultiplier);
-			coloredShader.setVec3(lightId + ".diffuse", pointLights[i]->color);
-		}
-	}
-
-	PointLight::PointLight(glm::vec3 position, glm::vec3 color, Attenuation attenuation, float ambientMultiplier)
-	{
-		selectLightType(0);
-		setPosition(position);
-		changeColor(color);
-		changeAttenuation(attenuation);
-		changeAmbientMultiplier(ambientMultiplier);
-		pointLights.push_back(this);
-		UpdatePointLights();
+		lightId = "pointLights[" + std::to_string(id) + "]";
+		normalShader.use();
+		normalShader.setInt("numOfPointLights", IdCounter);
+		normalShader.setVec3(lightId + ".position", this->MovableObject::getPosition());
+		normalShader.setVec3(lightId + ".ambient", this->color * this->ambientMultiplier);
+		normalShader.setVec3(lightId + ".diffuse", this->color);
+		normalShader.setVec3(lightId + ".specular", this->color);
+		normalShader.setFloat(lightId + ".constant", attenuation.constantMultiplier);
+		normalShader.setFloat(lightId + ".linear", attenuation.linearMultiplier);
+		normalShader.setFloat(lightId + ".quadratic", attenuation.quadraticMultiplier);
+		coloredShader.use();
+		coloredShader.setInt("numOfPointLights", IdCounter);
+		coloredShader.setVec3(lightId + ".position", this->MovableObject::getPosition());
+		coloredShader.setVec3(lightId + ".ambient", this->color * this->ambientMultiplier);
+		coloredShader.setVec3(lightId + ".diffuse", this->color);
+		coloredShader.setFloat(lightId + ".constant", attenuation.constantMultiplier);
+		coloredShader.setFloat(lightId + ".linear", attenuation.linearMultiplier);
+		coloredShader.setFloat(lightId + ".quadratic", attenuation.quadraticMultiplier);
 	}
 }

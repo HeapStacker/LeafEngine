@@ -13,18 +13,20 @@
     <ClInclude Include="src\Mouse.h" />
     <ClInclude Include="src\ColoredBox.h" />
     <ClInclude Include="src\DirectionalLight.h" />
-    <ClInclude Include="src\IdentifiableObject.h" />
-    <ClInclude Include="src\PositionalLight.h" />
-    <ClInclude Include="src\MoveableObject.h" />
+    <ClInclude Include="src\DiminishableLight.h" />
     <ClInclude Include="src\PointLight.h" />
-    <ClInclude Include="src\RotateableObject.h" />
     <ClInclude Include="src\SpotLight.h" />
-    <ClInclude Include="src\ScalableObject.h" />
-    <ClInclude Include="src\TransformableObject.h" />
+    <ClInclude Include="src\SpatialObject.h" />
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\KeyInput.h" />
     <ClInclude Include="src\Shapes.h" />
     <ClInclude Include="src\TextureRect.h" />
+    <ClInclude Include="src\Light.h" />
+    <ClInclude Include="src\RotateableObject.h" />
+    <ClInclude Include="src\MovableObject.h" />
+    <ClInclude Include="src\ScalableObject.h" />
+    <ClInclude Include="src\MobileRotatableObject.h" />
+    <ClInclude Include="src\TransformableObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\FrameCapper.cpp" />
@@ -44,14 +46,10 @@
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\ColoredBox.cpp" />
     <ClCompile Include="src\DirectionalLight.cpp" />
-    <ClCompile Include="src\PositionalLight.cpp" />
-    <ClCompile Include="src\MoveableObject.cpp" />
+    <ClCompile Include="src\DiminishableLight.cpp" />
     <ClCompile Include="src\PointLight.cpp" />
-    <ClCompile Include="src\RotateableObject.cpp" />
     <ClCompile Include="src\Shader.cpp" />
-    <ClCompile Include="src\ScalableObject.cpp" />
     <ClCompile Include="src\SpotLight.cpp" />
-    <ClCompile Include="src\TransformableObject.cpp" />
     <ClCompile Include="src\TexturedBox.h" />
     <ClCompile Include="src\TexturedBox.cpp" />
     <ClCompile Include="src\Model.cpp" />
@@ -60,5 +58,11 @@
     <ClCompile Include="src\KeyInput.cpp" />
     <ClCompile Include="src\Shapes.cpp" />
     <ClCompile Include="src\TextureRect.cpp" />
+    <ClCompile Include="src\MovableObject.cpp" />
+    <ClCompile Include="src\ScalableObject.cpp" />
+    <ClCompile Include="src\RotateableObject.cpp" />
+    <ClCompile Include="src\MobileRotatableObject.cpp" />
+    <ClCompile Include="src\MobileScalableObject.h" />
+    <ClCompile Include="src\MobileScalableObject.cpp" />
   </ItemGroup>
 </Project>

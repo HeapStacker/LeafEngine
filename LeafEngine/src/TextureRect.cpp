@@ -13,13 +13,8 @@ namespace lf {
 	static std::vector<TextureRect*> TransparentRectangles;
 	static std::map<float, glm::vec3> sorted;
 
-	void TextureRect::setNewId() {
-		id = RectangleId++;
-	}
-
 	void TextureRect::render() {
-		normalShader.setMat4("model", modelMatrix);
-		glStencilMask(0x00);
+		normalShader.setMat4("model", this->SpatialObject::modelMatrix);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, diffuseMap);
 		glActiveTexture(GL_TEXTURE1);
@@ -58,7 +53,6 @@ namespace lf {
 	}
 
 	TextureRect::TextureRect(const glm::vec3& position, const char* diffuseTexturePath, const char* specularTexturePath) {
-		setNewId();
 		initializeRectangleVertices();
 		setPosition(position);
 		diffuseMap = internal::TextureFromFile(diffuseTexturePath, ".", &transparent);

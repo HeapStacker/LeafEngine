@@ -5,34 +5,30 @@ namespace lf {
 	static std::vector<DirectionalLight*> directionalLights;
 	static Shader& normalShader = Shader::getNormalShader();
 	static Shader& coloredShader = Shader::getColoredShader();
+	static unsigned int IdCounter = 0;
 
-	void DirectionalLight::UpdateDirectionalLights()
+	void DirectionalLight::update()
 	{
-		normalShader.use();
-		normalShader.setInt("numOfDirLights", directionalLights.size());
-		coloredShader.use();
-		coloredShader.setInt("numOfDirLights", directionalLights.size());
 		static std::string lightId;
-		for (int i = 0; i < directionalLights.size(); i++) {
-			lightId = "dirLights[" + std::to_string(i) + "]";
-			normalShader.use();
-			normalShader.setVec3(lightId + ".direction", directionalLights[i]->direction);
-			normalShader.setVec3(lightId + ".ambient", directionalLights[i]->color * directionalLights[i]->ambientMultiplier);
-			normalShader.setVec3(lightId + ".diffuse", directionalLights[i]->color);
-			normalShader.setVec3(lightId + ".specular", directionalLights[i]->color);
-
-			coloredShader.use();
-			coloredShader.setVec3(lightId + ".direction", directionalLights[i]->direction);
-			coloredShader.setVec3(lightId + ".ambient", directionalLights[i]->color * directionalLights[i]->ambientMultiplier);
-			coloredShader.setVec3(lightId + ".diffuse", directionalLights[i]->color);
-		}
+		lightId = "dirLights[" + std::to_string(id) + "]";
+		normalShader.use();
+		normalShader.setInt("numOfDirLights", IdCounter);
+		normalShader.setVec3(lightId + ".direction", this->RotateableObject::getRotation());
+		normalShader.setVec3(lightId + ".ambient", this->color * this->ambientMultiplier);
+		normalShader.setVec3(lightId + ".diffuse", this->color);
+		normalShader.setVec3(lightId + ".specular", this->color);
+		coloredShader.use();
+		coloredShader.setInt("numOfDirLights", IdCounter);
+		coloredShader.setVec3(lightId + ".direction", this->RotateableObject::getRotation());
+		coloredShader.setVec3(lightId + ".ambient", this->color * this->ambientMultiplier);
+		coloredShader.setVec3(lightId + ".diffuse", this->color);
 	}
 
-	DirectionalLight::DirectionalLight(glm::vec3 color, glm::vec3 direction)
+	DirectionalLight::DirectionalLight(const glm::vec3& color, const glm::vec3& orientation)
 	{
-		this->direction = direction;
-		this->color = color;
-		directionalLights.push_back(this);
-		UpdateDirectionalLights();
+		id = IdCounter++;
+		Light::changeColor(color);
+		RotateableObject::orient(orientation);
+		update();
 	}
 }

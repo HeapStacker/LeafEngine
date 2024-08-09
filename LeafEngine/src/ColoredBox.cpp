@@ -13,45 +13,29 @@ namespace lf {
 	static unsigned int ColoredBoxId = 0;
 	static std::vector<ColoredBox*> boxes;
 
-	void ColoredBox::setNewId() {
-		id = ColoredBoxId++;
-	}
-
+	static float outlineScale = 1.03f;
+	static glm::mat4 tempModel;
 	void ColoredBox::render() {
 		coloredShader.use();
 		coloredShader.setVec3("color", color);
-		coloredShader.setMat4("model", modelMatrix);
+		coloredShader.setMat4("model", this->SpatialObject::modelMatrix);
 		if (outline) {
-
-			// we draw the object
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
-			glStencilMask(0xFF);
-
 			coloredShader.use();
-			coloredShader.setMat4("model", modelMatrix);
+			coloredShader.setMat4("model", this->SpatialObject::modelMatrix);
 			glBindVertexArray(getBoxVao());
 			glDrawArrays(GL_TRIANGLES, 0, BoxVerticesCount);
 
-
-			// we scale the object but only draw the parts which were not drawn before
 			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-			glStencilMask(0x00);
-
-			static float scale = 1.03f;
-			static glm::mat4 tempModel;
-			tempModel = glm::scale(this->modelMatrix, glm::vec3(scale, scale, scale));
+			tempModel = glm::scale(this->SpatialObject::modelMatrix, glm::vec3(outlineScale));
 			outlineShader.use();
 			outlineShader.setMat4("model", tempModel);
 			glBindVertexArray(getBoxVao());
 			glDrawArrays(GL_TRIANGLES, 0, BoxVerticesCount);
 
-
-			// we return everything to default
-			glStencilMask(0xFF);
 			glStencilFunc(GL_ALWAYS, 0, 0xFF);
 		}
 		else {
-			glStencilMask(0x00);
 			glBindVertexArray(getBoxVao());
 			glDrawArrays(GL_TRIANGLES, 0, BoxVerticesCount);
 		}
@@ -71,7 +55,6 @@ namespace lf {
 	}
 
 	ColoredBox::ColoredBox(const glm::vec3& position, const glm::vec3& color) {
-		setNewId();
 		initializeBoxVertices();
 		setPosition(position);
 		this->color = color;

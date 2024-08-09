@@ -1,57 +1,11 @@
 #include "Collider.h"
+#include "Shapes.h"
 #include "Shader.h"
 #include "Camera.h"
 
 namespace lf {
-	static float boxVertices[] = {    
-		-0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f,  0.5f, -0.5f,
-		 0.5f,  0.5f, -0.5f,
-		-0.5f,  0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-
-		-0.5f, -0.5f,  0.5f,
-		 0.5f, -0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
-		-0.5f, -0.5f,  0.5f,
-
-		-0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-		-0.5f, -0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
-
-		 0.5f,  0.5f,  0.5f,
-		 0.5f,  0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
-
-		-0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f,  0.5f,
-		 0.5f, -0.5f,  0.5f,
-		-0.5f, -0.5f,  0.5f,
-		-0.5f, -0.5f, -0.5f,
-
-		-0.5f,  0.5f, -0.5f,
-		 0.5f,  0.5f, -0.5f,
-		 0.5f,  0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f, -0.5f
-	};
-
-	static unsigned int boxColiderVAO;
-	static unsigned int boxColiderVBO;
-	static unsigned int boxVerticesCount = sizeof(boxVertices) / sizeof(float);
 	static std::vector<Collider*> colliders;
-	static unsigned int boxColiderCount = 0;
+	static unsigned int IdReff = 1;
 
 	static std::vector<ColisionPair> colisions;
 
@@ -63,57 +17,49 @@ namespace lf {
 		return false;
 	}
 
-	static void setBoxColiderVAOVBO() {
-		glGenVertexArrays(1, &boxColiderVAO);
-		glGenBuffers(1, &boxColiderVBO);
-		glBindBuffer(GL_ARRAY_BUFFER, boxColiderVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(boxVertices), boxVertices, GL_STATIC_DRAW); //or GL_DYNAMIC_DRAW for moving objects
-		glBindVertexArray(boxColiderVAO);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-	}
-
-	void Collider::setNewId()
-	{
-		id = boxColiderCount++;
-	}
-
 	Collider::Collider()
 	{
-		setNewId();
-		static bool firstInit = true;
-		if (firstInit) { setBoxColiderVAOVBO(); firstInit = false; }
-		halfExtents = glm::vec3(1, 1, 1) / 2.f;
+		this->id = IdReff++;
+		initializeMinimalBoxVertices();
 		colliders.push_back(this);
 	}
 
-	void Collider::scale(float scalar) {
-		halfExtents *= scalar;
-		scale(scalar);
-	}
-
-	void Collider::scale(const glm::vec3& scalar) {
-		halfExtents *= scalar;
-		scale(scalar);
-	}
-
+	// extended Separating Axis Theorem (SAT)
 	bool Collider::colidesWith(Collider* colider)
 	{
-		static bool isColision;
-		isColision = true;
-		static std::vector<glm::vec3> axes = {
-				glm::vec3(1, 0, 0),
-				glm::vec3(0, 1, 0),
-				glm::vec3(0, 0, 1)
-		};
-		glm::vec3 delta = colider->getPosition() - this->getPosition();
-		for (glm::vec3& axis : axes) {
-			float deltaProjection = glm::dot(delta, axis);
-			float sumExtents = glm::dot(this->halfExtents, axis) + glm::dot(colider->halfExtents, axis);
-			if (glm::abs(deltaProjection) > sumExtents) isColision = false;
+		static glm::vec3 thisHalfExtents, coliderHalfExtents;
+		thisHalfExtents = this->getScale() / 2.f;
+		coliderHalfExtents = colider->getScale() / 2.f;
+		static std::vector<glm::vec3> axes;
+		axes.clear();
+		std::vector<glm::vec3> thisAxes = this->getAxes();
+		std::vector<glm::vec3> otherAxes = colider->getAxes();
+		axes.insert(axes.end(), thisAxes.begin(), thisAxes.end());
+		axes.insert(axes.end(), otherAxes.begin(), otherAxes.end());
+		for (const auto& thisAxis : thisAxes) {
+			for (const auto& otherAxis : otherAxes) {
+				glm::vec3 crossProduct = glm::cross(thisAxis, otherAxis);
+				if (glm::length(crossProduct) > 1e-6) { // Dodaj samo osi koje nisu preblizu nuli
+					axes.push_back(glm::normalize(crossProduct));
+				}
+			}
 		}
-		if (isColision) return true;
-		return false;
+		glm::vec3 delta = colider->getPosition() - this->getPosition();
+		for (const glm::vec3& axis : axes) {
+			if (glm::length(axis) < 1e-6) continue;
+			float deltaProjection = glm::dot(delta, axis);
+			float thisExtent =
+				std::abs(glm::dot(thisHalfExtents.x * thisAxes[0], axis)) +
+				std::abs(glm::dot(thisHalfExtents.y * thisAxes[1], axis)) +
+				std::abs(glm::dot(thisHalfExtents.z * thisAxes[2], axis));
+			float otherExtent =
+				std::abs(glm::dot(coliderHalfExtents.x * otherAxes[0], axis)) +
+				std::abs(glm::dot(coliderHalfExtents.y * otherAxes[1], axis)) +
+				std::abs(glm::dot(coliderHalfExtents.z * otherAxes[2], axis));
+			float sumExtents = thisExtent + otherExtent;
+			if (std::abs(deltaProjection) > sumExtents) return false;
+		}
+		return true;
 	}
 
 	bool Collider::operator==(const Collider& colider)
@@ -163,7 +109,6 @@ namespace lf {
 		static ColisionPair cp, lastCp = { 0, 0 };
 		while (true) {
 			cp = getLastCollision();
-			//ensures that 2 same, stacked collisions don't repeat
 			if (!areEqual(&cp, &lastCp)) {
 				if (!areEqual(&cp, &nullCp)) collisionRule(cp);
 				lastCp = cp;
@@ -185,10 +130,10 @@ namespace lf {
 	static Shader& coloredShader = Shader::getColoredShader();
 
 	void Collider::render() {
-		coloredShader.setMat4("model", modelMatrix);
+		coloredShader.setMat4("model", this->SpatialObject::modelMatrix);
 		coloredShader.setVec3("color", { 0, 1, 0 });
-		glBindVertexArray(boxColiderVAO);
-		glDrawArrays(GL_TRIANGLES, 0, boxVerticesCount);
+		glBindVertexArray(getMinimalBoxVao());
+		glDrawArrays(GL_TRIANGLES, 0, getMinimalBoxVerticesCount());
 	}
 
 	void Collider::RenderColliders(glm::mat4& viewMatrix, glm::mat4& projectionMatrix)

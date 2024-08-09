@@ -1,11 +1,9 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "IdentifiableObject.h"
 #include "TransformableObject.h"
 
 namespace lf {
-	class TextureRect : public TransformableObject, public IdentifiableObject {
-		void setNewId() override;
+	class TextureRect : public TransformableObject {
 		unsigned int diffuseMap, specularMap;
 		bool visible = true, transparent = false;
 		void render();

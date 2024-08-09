@@ -1,11 +1,9 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "IdentifiableObject.h"
 #include "TransformableObject.h"
 
 namespace lf {
-	class ColoredBox : public TransformableObject, public IdentifiableObject {
-		void setNewId() override;
+	class ColoredBox : public TransformableObject {
 		glm::vec3 color = { 0.f, 0.f, 1.f };
 		bool visible = true;
 		bool outline = false;

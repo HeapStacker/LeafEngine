@@ -43,6 +43,79 @@ namespace lf {
 
 	// NEXT TEMPLATE -------------------------------------------------------------------------------------------------------------------------------
 
+	static float MinimalBoxVertices[] = {
+		 // Back face
+		 -0.5f, -0.5f, -0.5f,  // Bottom-left
+		  0.5f,  0.5f, -0.5f,  // top-right
+		  0.5f, -0.5f, -0.5f,  // bottom-right         
+		  0.5f,  0.5f, -0.5f,  // top-right
+		 -0.5f, -0.5f, -0.5f,  // bottom-left
+		 -0.5f,  0.5f, -0.5f,  // top-le ft
+		 // Front face		   
+		 -0.5f, -0.5f,  0.5f,  // bottom-left
+		  0.5f, -0.5f,  0.5f,  // bottom-right
+		  0.5f,  0.5f,  0.5f,  // top-right
+		  0.5f,  0.5f,  0.5f,  // top-right
+		 -0.5f,  0.5f,  0.5f,  // top-left
+		 -0.5f, -0.5f,  0.5f,  // bottom-l eft
+		 // Left face		   
+		 -0.5f,  0.5f,  0.5f,  // top-right
+		 -0.5f,  0.5f, -0.5f,  // top-left
+		 -0.5f, -0.5f, -0.5f,  // bottom-left
+		 -0.5f, -0.5f, -0.5f,  // bottom-left
+		 -0.5f, -0.5f,  0.5f,  // bottom-right
+		 -0.5f,  0.5f,  0.5f,  // top-rig ht
+		 // Right face		   
+		  0.5f,  0.5f,  0.5f,  // top-left
+		  0.5f, -0.5f, -0.5f,  // bottom-right
+		  0.5f,  0.5f, -0.5f,  // top-right         
+		  0.5f, -0.5f, -0.5f,  // bottom-right
+		  0.5f,  0.5f,  0.5f,  // top-left
+		  0.5f, -0.5f,  0.5f,  // bottom-left     
+		 // Bottom face		   
+		 -0.5f, -0.5f, -0.5f,  // top-right
+		  0.5f, -0.5f, -0.5f,  // top-left
+		  0.5f, -0.5f,  0.5f,  // bottom-left
+		  0.5f, -0.5f,  0.5f,  // bottom-left
+		 -0.5f, -0.5f,  0.5f,  // bottom-right
+		 -0.5f, -0.5f, -0.5f,  // top-right
+		 // Top face			   
+		 -0.5f,  0.5f, -0.5f,  // top-left
+		  0.5f,  0.5f,  0.5f,  // bottom-right
+		  0.5f,  0.5f, -0.5f,  // top-right     
+		  0.5f,  0.5f,  0.5f,  // bottom-right
+		 -0.5f,  0.5f, -0.5f,  // top-left
+		 -0.5f,  0.5f,  0.5f   // bottom-left                      
+	};
+
+	static unsigned int MinimalBoxVao, MinimalBoxVbo;
+
+	void initializeMinimalBoxVertices() {
+		static bool firstCall = true;
+		if (firstCall) {
+			glGenVertexArrays(1, &MinimalBoxVao);
+			glGenBuffers(1, &MinimalBoxVbo);
+			glBindBuffer(GL_ARRAY_BUFFER, MinimalBoxVbo);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(MinimalBoxVertices), MinimalBoxVertices, GL_STATIC_DRAW); //or GL_DYNAMIC_DRAW for moving objects
+			glBindVertexArray(MinimalBoxVao);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(0);
+			firstCall = false;
+		}
+	}
+
+	unsigned int&& getMinimalBoxVerticesCount()
+	{
+		return sizeof(MinimalBoxVertices) / (sizeof(float) * 3);
+	}
+
+	unsigned int& getMinimalBoxVao() {
+		return MinimalBoxVao;
+	}
+
+
+	// NEXT TEMPLATE -------------------------------------------------------------------------------------------------------------------------------
+
 	static float BoxVertices[] = {		
 		// Back face
 		-0.5f, -0.5f, -0.5f,	0.0f,  0.0f, -1.0f,	 // Bottom-left

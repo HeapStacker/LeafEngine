@@ -8,7 +8,7 @@ unsigned int fps = 60;
 Window gameWindow("Playground", windowWidth, windowHeight, "textures/ico.png");
 Camera gameCamera({ 0, 0, 0 });
 Mouse mouse(true, false, true);
-ColoredBox box({ 1, 0, -4 }, {0.5f, 0.f, 1.f});
+ColoredBox box({ 1, 0, -6 }, {0.5f, 0.f, 1.f});
 Model bird("models/bird/bird.obj");
 TexturedBox box1 = TexturedBox({ 2.f, 0, -15.f }, "textures/ico.png", "textures/ico.png");
 TexturedBox box2 = TexturedBox({ -1.f, 0, -15.f }, "textures/ico.png", "textures/ico.png");
@@ -17,6 +17,8 @@ TextureRect grass = TextureRect({-3, -1, -5}, "textures/grass.png", "textures/gr
 TextureRect window1 = TextureRect({3, 0, -5}, "textures/transparentWindow.png", "textures/transparentWindow.png");
 TextureRect window2 = TextureRect({2, 0, -3}, "textures/transparentWindow.png", "textures/transparentWindow.png");
 TextureRect window3 = TextureRect({1, 0, -2}, "textures/transparentWindow.png", "textures/transparentWindow.png");
+Collider col1;
+Collider col2;
 
 void processInput()
 {
@@ -49,30 +51,24 @@ int main()
 	Shader::ChangeFogEffect(0.2f, 5.f);
 	Shader::ChangeBackgroundColor({ 0.5f, 0.3f , 0.f });
 	DirectionalLight sun1({ 1.f, 1.f, 1.f });
-	//Collider::SetVisibility(true);
 	Collider::AssignCollisionRules(colisionRulles);
+	Collider::SetVisibility(true);
 
-	//grass.setVisibility(false);
-	//box.setOutline(true);
-	box.rotateAround({ 1, 1, 0 }, 45.f);
+	box.setOutline(true);
+	col2.setPosition(&box);
+	col2.linkTo(&box);
+	box.rotateOnly({ 1, 1, 0 }, 45.f);
+	
+	col1.linkTo(&bird);
 	bird.setPosition({ 0.f, 0.f, -10.f });
 	bird.scale(0.3f);
-	bird.rotateAround({ 1, 0, 0 }, 270);
-	Collider col1 = Collider();
-	Collider col2 = Collider();
-	col1.setPosition(bird.getPosition());
-	col2.setPosition(box.getPosition());
-	col1.linkToPosition(&bird);
-	col2.linkToPosition(&box);
-	//PointLight lamp = PointLight(box.getPosition());
-	//lamp.linkToPosition(&box);
+	bird.rotate({ 1, 0, 0 }, 270);
+
 	box2.linkToRotation(&box1);
 	box2.scale(2.f);
 	box3.linkToRotation(&box1);
-	//box3.setOutline(true);
 
 	GuiContainer cont("win3", 10, 10);
-	//cont.center();
 	Text txt("My transparent container");
 	CheckBox cb1("Free robux");
 	glm::vec3 color = { 0, 0, 0 };
@@ -84,8 +80,7 @@ int main()
 
 	APPLICATION_THREAD_START
 	processInput();
-	box1.rotateAround({ 0, 0, 1 }, 1);
-	
+	box1.rotate({0,0,1}, 3);
 	APPLICATION_THREAD_END
 
 	return 0;

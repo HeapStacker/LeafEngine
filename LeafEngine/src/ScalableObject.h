@@ -1,14 +1,16 @@
 #pragma once
-#include <glm/glm.hpp>
+#include "SpatialObject.h"
+#include <vector>
 
 namespace lf {
-	class ScalableObject
-	{
-	protected:
-		glm::mat4* linkedModelMatrixS = nullptr;
+	class ScalableObject : public SpatialObject {
+		bool traversed = false;
+		std::vector<ScalableObject*> linkedToScale;
 	public:
-		void scale(float scalar);
-		void scale(const glm::vec3& scalar);
+		glm::vec3 getScale();
+		void scaleOnly(float scalar);
+		void scaleOnly(const glm::vec3& scalar);
+		void linkToScale(ScalableObject* object);
+		void unlinkFromScale(ScalableObject* object);
 	};
 }
-

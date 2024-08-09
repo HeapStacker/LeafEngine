@@ -1,13 +1,17 @@
 #pragma once
-#include <glm/glm.hpp>
+#include "SpatialObject.h"
+#include <vector>
 
 namespace lf {
-	class RotateableObject {
-		//std::vector<RotateableObject*> linkedObjects;
-	protected:
-		glm::mat4* linkedModelMatrixR = nullptr;
-		glm::mat4 rotationalOutcome = glm::mat4(1.f);
+	class RotateableObject : public SpatialObject {
+		bool traversed = false;
+		std::vector<RotateableObject*> linkedToRotation;
 	public:
-		void rotateAround(glm::vec3 axis, float degrees);
+		glm::vec3&& getRotation();
+		std::vector<glm::vec3> getAxes();
+		void orient(const glm::vec3& orientation);
+		void rotateOnly(glm::vec3 axis, float degrees);
+		void linkToRotation(RotateableObject* object);
+		void unlinkFromRotation(RotateableObject* object);
 	};
 }
