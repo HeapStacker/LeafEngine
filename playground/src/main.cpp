@@ -1,4 +1,5 @@
 #include "LeafEngine.h"
+#include <iostream>
 
 using namespace lf;
 
@@ -9,7 +10,7 @@ Window gameWindow("Playground", windowWidth, windowHeight, "textures/ico.png");
 Camera gameCamera({ 0, 0, 0 });
 Mouse mouse(true, false, true);
 ColoredBox box({ 1, 0, -6 }, {0.5f, 0.f, 1.f});
-Model bird("models/bird/bird.obj");
+Model bird({ 0.f, 0.f, -10.f }, "models/bird/bird.obj");
 TexturedBox box1 = TexturedBox({ 2.f, 0, -15.f }, "textures/ico.png", "textures/ico.png");
 TexturedBox box2 = TexturedBox({ -1.f, 0, -15.f }, "textures/ico.png", "textures/ico.png");
 TexturedBox box3 = TexturedBox({ -2.f, 0, -15.f }, "textures/ico.png", "textures/ico.png");
@@ -17,8 +18,8 @@ TextureRect grass = TextureRect({-3, -1, -5}, "textures/grass.png", "textures/gr
 TextureRect window1 = TextureRect({3, 0, -5}, "textures/transparentWindow.png", "textures/transparentWindow.png");
 TextureRect window2 = TextureRect({2, 0, -3}, "textures/transparentWindow.png", "textures/transparentWindow.png");
 TextureRect window3 = TextureRect({1, 0, -2}, "textures/transparentWindow.png", "textures/transparentWindow.png");
-Collider col1;
-Collider col2;
+Collider col1(&bird);
+Collider col2(&box);
 
 void processInput()
 {
@@ -31,7 +32,7 @@ void processInput()
 	if (keyPressed(GLFW_KEY_DOWN)) gameCamera.ProcessKeyboard(BACKWARD, FrameCapper::GetDeltaTime());
 	if (keyPressed(GLFW_KEY_LEFT)) gameCamera.ProcessKeyboard(LEFT, FrameCapper::GetDeltaTime());
 	if (keyPressed(GLFW_KEY_RIGHT)) gameCamera.ProcessKeyboard(RIGHT, FrameCapper::GetDeltaTime());
-	if (keyPressed(GLFW_KEY_SPACE)) gameCamera.ProcessKeyboard(UP, FrameCapper::GetDeltaTime());
+	if (keyPressed(GLFW_KEY_SPACE)) { gameCamera.ProcessKeyboard(UP, FrameCapper::GetDeltaTime()); }
 	if (keyPressed(GLFW_KEY_LEFT_SHIFT)) gameCamera.ProcessKeyboard(DOWN, FrameCapper::GetDeltaTime());
 }
 
@@ -55,18 +56,16 @@ int main()
 	Collider::SetVisibility(true);
 
 	box.setOutline(true);
-	col2.setPosition(&box);
 	col2.linkTo(&box);
-	box.rotateOnly({ 1, 1, 0 }, 45.f);
-	
+	box.rotate({ 1, 1, 0 }, 45.f);
+
 	col1.linkTo(&bird);
-	bird.setPosition({ 0.f, 0.f, -10.f });
 	bird.scale(0.3f);
 	bird.rotate({ 1, 0, 0 }, 270);
 
-	box2.linkToRotation(&box1);
+	box2.linkTo(&box1);
 	box2.scale(2.f);
-	box3.linkToRotation(&box1);
+	box3.linkTo(&box1);
 
 	GuiContainer cont("win3", 10, 10);
 	Text txt("My transparent container");

@@ -17,9 +17,18 @@ namespace lf {
 		return false;
 	}
 
-	Collider::Collider()
+	Collider::Collider(const glm::vec3& position)
 	{
 		this->id = IdReff++;
+		setPosition(position);
+		initializeMinimalBoxVertices();
+		colliders.push_back(this);
+	}
+	
+	Collider::Collider(MovableObject* position)
+	{
+		this->id = IdReff++;
+		setPosition(position);
 		initializeMinimalBoxVertices();
 		colliders.push_back(this);
 	}

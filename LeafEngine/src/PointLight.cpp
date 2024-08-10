@@ -16,6 +16,15 @@ namespace lf {
 		update();
 	}
 
+	PointLight::PointLight(MovableObject* position, glm::vec3 color, unsigned int intensity)
+	{
+		id = IdCounter++;
+		Light::changeColor(color);
+		MovableObject::setPosition(position);
+		changeIntensity(intensity);
+		update();
+	}
+
 	void PointLight::update()
 	{
 		static std::string lightId;

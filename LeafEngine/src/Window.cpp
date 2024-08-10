@@ -1,6 +1,8 @@
 #include "Window.h"
 #include "Shader.h"
+#include <iostream>
 #include "stb_image.h"
+#include "FrameCapper.h"
 #include "GuiSelection.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"

@@ -64,6 +64,19 @@ namespace lf {
 			Rectangles.push_back(this);
 		}
 	}
+	
+	TextureRect::TextureRect(MovableObject* position, const char* diffuseTexturePath, const char* specularTexturePath) {
+		initializeRectangleVertices();
+		setPosition(position);
+		diffuseMap = internal::TextureFromFile(diffuseTexturePath, ".", &transparent);
+		specularMap = internal::TextureFromFile(specularTexturePath, ".", &transparent);
+		if (transparent) {
+			TransparentRectangles.push_back(this);
+		}
+		else {
+			Rectangles.push_back(this);
+		}
+	}
 
 	void TextureRect::setVisibility(bool visible) {
 		this->visible = visible;

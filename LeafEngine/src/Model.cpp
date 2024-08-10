@@ -42,7 +42,7 @@ namespace lf {
 		this->visible = visible;
 	}
 
-	Model::Model(std::string modelPath)
+	Model::Model(const glm::vec3& position, std::string modelPath)
 	{
 		for (ModelDictionary& model : modelDictionary) {
 			if (model.modelPath == modelPath) {
@@ -53,6 +53,22 @@ namespace lf {
 			modelDictionary.push_back({ modelPath, internal::ModelLoader(modelPath) });
 			this->model = &modelDictionary.back().model;
 		}
+		MovableObject::setPosition(position);
+		models.push_back(this);
+	}
+
+	Model::Model(MovableObject* position, std::string modelPath)
+	{
+		for (ModelDictionary& model : modelDictionary) {
+			if (model.modelPath == modelPath) {
+				this->model = &model.model;
+			}
+		}
+		if (!this->model) {
+			modelDictionary.push_back({ modelPath, internal::ModelLoader(modelPath) });
+			this->model = &modelDictionary.back().model;
+		}
+		MovableObject::setPosition(position);
 		models.push_back(this);
 	}
 

@@ -6,7 +6,6 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-#include <iostream>
 #include "Camera.h"
 
 namespace lf {

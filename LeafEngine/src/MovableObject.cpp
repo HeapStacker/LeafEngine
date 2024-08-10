@@ -1,24 +1,26 @@
 #include "MovableObject.h"
+#include <iostream>
 
 namespace lf {
     void MovableObject::setPosition(const glm::vec3& position)
     {
-        modelMatrix[3] = glm::vec4({ position, 1 });
+        SpatialObject::modelMatrix[3] = glm::vec4({ position, 1 });
     }
 
     void MovableObject::setPosition(MovableObject* object)
     {
-        modelMatrix[3] = object->modelMatrix[3];
+        if (object) SpatialObject::modelMatrix[3] = glm::vec4({ object->getPosition(), 1 });
+        else std::cerr << "Positional object not properly set.\n";
     }
 
     glm::vec3&& MovableObject::getPosition()
     {
-        return glm::vec3(modelMatrix[3]);
+        return glm::vec3(SpatialObject::modelMatrix[3]);
     }
 
     void MovableObject::translate(const glm::vec3& position)
     {
-        modelMatrix[3] = glm::vec4({ glm::vec3(modelMatrix[3]) + position, 1 });
+        SpatialObject::modelMatrix[3] = glm::vec4({ glm::vec3(SpatialObject::modelMatrix[3]) + position, 1 });
         this->MovableObject::traversed = true;
         for (MovableObject* obj : linkedToTranslation) {
             if (!obj->MovableObject::traversed) obj->translate(position);

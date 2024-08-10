@@ -47,4 +47,16 @@ namespace lf {
 		changeIntensity(intensity);
 		update();
 	}
+
+	SpotLight::SpotLight(MovableObject* position, glm::vec3 orientation, glm::vec3 color, float innerCutOff, float outerCutOff, unsigned int intensity)
+	{
+		id = IdCounter++;
+		setPosition(position);
+		RotateableObject::orient(orientation);
+		changeColor(color);
+		this->innerCutOff = innerCutOff;
+		this->outerCutOff = outerCutOff;
+		changeIntensity(intensity);
+		update();
+	}
 }

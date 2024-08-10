@@ -1,10 +1,7 @@
 #pragma once
 #include "DllExporter.h"
-#include <string>
-#include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "FrameCapper.h"
 
 namespace lf {
 

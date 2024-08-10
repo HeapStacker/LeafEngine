@@ -20,7 +20,8 @@ namespace lf {
 		bool operator==(const Collider& colider);
 		bool operator!=(const Collider& colider);
 	public:
-		Collider();
+		Collider(const glm::vec3& position = {0.f, 0.f, 0.f});
+		Collider(MovableObject* position);
 		static void CheckForCollisions();
 		static void ResolveCollisions();
 		static void AssignCollisionRules(ColisionFunction collisionRuleFunction);

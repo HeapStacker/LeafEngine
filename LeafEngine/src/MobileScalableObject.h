@@ -6,8 +6,8 @@ namespace lf {
 		bool traversed = false;
 		std::vector<MobileScalableObject*> linkedToScaleTranslation;
 	public:
-		void scale(float scalar);
-		void scale(const glm::vec3& scalar);
+		void scaleTranslate(float scalar);
+		void scaleTranslate(const glm::vec3& scalar);
 		void linkToScaleTranslation(MobileScalableObject* object);
 		void unlinkFromScaleTranslation(MobileScalableObject* object);
 	};

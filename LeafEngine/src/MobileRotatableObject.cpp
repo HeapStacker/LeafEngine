@@ -1,10 +1,8 @@
 #include "MobileRotatableObject.h"
 #include <glm/gtc/matrix_transform.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/matrix_decompose.hpp>
 
 namespace lf {
-    void MobileRotatableObject::rotate(glm::vec3 axis, float degrees)
+    void MobileRotatableObject::rotateTranslate(glm::vec3 axis, float degrees)
     {
         SpatialObject::modelMatrix = glm::rotate(SpatialObject::modelMatrix, glm::radians(degrees), glm::normalize(axis));
         glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(degrees), axis);

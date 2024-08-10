@@ -1,5 +1,6 @@
 #include <vector>
 #include "Shader.h"
+#include <iostream>
 
 namespace lf {
     static Shader normalShader, coloredShader, outlineShader;

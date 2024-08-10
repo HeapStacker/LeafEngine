@@ -41,12 +41,12 @@ namespace lf {
         modelMatrix = glm::scale(modelMatrix, scale);
     }
 
-    void RotateableObject::rotateOnly(glm::vec3 axis, float degrees)
+    void RotateableObject::rotate(glm::vec3 axis, float degrees)
     {
         modelMatrix = glm::rotate(modelMatrix, glm::radians(degrees), glm::normalize(axis));
         this->RotateableObject::traversed = true;
         for (RotateableObject* obj : linkedToRotation) {
-            if (!obj->RotateableObject::traversed) obj->RotateableObject::rotateOnly(axis, degrees);
+            if (!obj->RotateableObject::traversed) obj->RotateableObject::rotate(axis, degrees);
         }
         this->RotateableObject::traversed = false;
     }

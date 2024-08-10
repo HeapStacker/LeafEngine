@@ -74,6 +74,14 @@ namespace lf {
 		specularMap = internal::TextureFromFile(specularTexturePath, ".");
 		boxes.push_back(this);
 	}
+	
+	TexturedBox::TexturedBox(MovableObject* position, const char* diffuseTexturePath, const char* specularTexturePath) {
+		initializeTexturedBoxVertices();
+		setPosition(position);
+		diffuseMap = internal::TextureFromFile(diffuseTexturePath, ".");
+		specularMap = internal::TextureFromFile(specularTexturePath, ".");
+		boxes.push_back(this);
+	}
 
 	void TexturedBox::setVisibility(bool visible) {
 		this->visible = visible;

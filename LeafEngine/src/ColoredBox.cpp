@@ -19,6 +19,8 @@ namespace lf {
 		coloredShader.use();
 		coloredShader.setVec3("color", color);
 		coloredShader.setMat4("model", this->SpatialObject::modelMatrix);
+
+
 		if (outline) {
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
 			coloredShader.use();
@@ -55,6 +57,13 @@ namespace lf {
 	}
 
 	ColoredBox::ColoredBox(const glm::vec3& position, const glm::vec3& color) {
+		initializeBoxVertices();
+		setPosition(position);
+		this->color = color;
+		boxes.push_back(this);
+	}
+	
+	ColoredBox::ColoredBox(MovableObject* position, const glm::vec3& color) {
 		initializeBoxVertices();
 		setPosition(position);
 		this->color = color;

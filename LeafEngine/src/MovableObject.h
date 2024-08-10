@@ -3,7 +3,7 @@
 #include <vector>
 
 namespace lf {
-	class MovableObject : public SpatialObject {
+	class MovableObject : public virtual SpatialObject {
 		bool traversed = false;
 		std::vector<MovableObject*> linkedToTranslation;
 	public:

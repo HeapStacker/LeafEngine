@@ -7,7 +7,7 @@ namespace lf {
 		bool traversed = false;
 		std::vector<MobileRotatableObject*> linkedToRotationTranslation;
 	public:
-		void rotate(glm::vec3 axis, float degrees);
+		void rotateTranslate(glm::vec3 axis, float degrees);
 		void linkToRotationTranslation(MobileRotatableObject* object);
 		void unlinkFromRotationTranslation(MobileRotatableObject* object);
 	};

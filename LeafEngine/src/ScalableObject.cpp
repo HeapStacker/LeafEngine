@@ -10,22 +10,22 @@ namespace lf {
         return scale;
     }
 
-    void ScalableObject::scaleOnly(float scalar)
+    void ScalableObject::scale(float scalar)
     {
         modelMatrix = glm::scale(modelMatrix, glm::vec3(scalar));
         this->ScalableObject::traversed = true;
         for (ScalableObject* obj : linkedToScale) {
-            if (!obj->ScalableObject::traversed) obj->scaleOnly(scalar);
+            if (!obj->ScalableObject::traversed) obj->scale(scalar);
         }
         this->ScalableObject::traversed = false;
     }
 
-    void ScalableObject::scaleOnly(const glm::vec3& scalar)
+    void ScalableObject::scale(const glm::vec3& scalar)
     {
         modelMatrix = glm::scale(modelMatrix, scalar);
         this->ScalableObject::traversed = true;
         for (ScalableObject* obj : linkedToScale) {
-            if (!obj->ScalableObject::traversed) obj->scaleOnly(scalar);
+            if (!obj->ScalableObject::traversed) obj->scale(scalar);
         }
         this->ScalableObject::traversed = false;
     }

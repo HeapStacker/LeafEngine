@@ -2,13 +2,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace lf {
-	void MobileScalableObject::scale(float scalar)
+	void MobileScalableObject::scaleTranslate(float scalar)
 	{
         SpatialObject::modelMatrix = glm::scale(SpatialObject::modelMatrix, glm::vec3(scalar));
         this->MobileScalableObject::traversed = true;
         for (MobileScalableObject* obj : linkedToScaleTranslation) {
             if (!obj->MobileScalableObject::traversed) {
-                obj->scale(scalar);
+                obj->scaleTranslate(scalar);
                 glm::vec3 distanceVector = obj->getPosition() - this->getPosition();
                 obj->setPosition(this->getPosition() + distanceVector * scalar);
             }
@@ -16,13 +16,13 @@ namespace lf {
         this->MobileScalableObject::traversed = false;
 	}
 
-    void MobileScalableObject::scale(const glm::vec3& scalar)
+    void MobileScalableObject::scaleTranslate(const glm::vec3& scalar)
     {
         SpatialObject::modelMatrix = glm::scale(SpatialObject::modelMatrix, scalar);
         this->MobileScalableObject::traversed = true;
         for (MobileScalableObject* obj : linkedToScaleTranslation) {
             if (!obj->MobileScalableObject::traversed) {
-                obj->scale(scalar);
+                obj->scaleTranslate(scalar);
                 glm::vec3 distanceVector = obj->getPosition() - this->getPosition();
                 obj->setPosition(this->getPosition() + distanceVector * scalar);
             }
